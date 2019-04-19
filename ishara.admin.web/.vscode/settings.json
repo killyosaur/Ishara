@@ -1,0 +1,14 @@
+{
+    "javascript.format.insertSpaceBeforeAndAfterBinaryOperators": false,
+    "javascript.format.insertSpaceAfterSemicolonInForStatements": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+    "javascript.format.insertSpaceAfterKeywordsInControlFlowStatements": false,
+    "javascript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+    "emmet.includeLanguages": {
+        "javascript": "javascriptreact"
+    },
+    "javascript.format.enable": false,
+    "javascript.format.insertSpaceAfterCommaDelimiter": false,
+    "javascript.autoClosingTags": false,
+    "editor.acceptSuggestionOnCommitCharacter": false
+}
