@@ -304,9 +304,9 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	user := gubu(jsonObj["Username"])
 
-	query := "FOR u IN user FOR p, s IN 1..1 OUTBOUND u secured_by FILTER s.Current == true && u._key == @uid RETURN { _key: p._key, PasswordHashAndSalt: p.PasswordHashAndSalt, Current: s.Current, SecureKey: s._key }"
+	query := "FOR p, s IN 1..1 OUTBOUND @uid secured_by FILTER s.Current == true RETURN { _key: p._key, PasswordHashAndSalt: p.PasswordHashAndSalt, Current: s.Current, SecureKey: s._key }"
 	bindVars := map[string]interface{}{
-		"uid": user.Key,
+		"uid": "user/" + user.Key.String(),
 	}
 
 	cursor, ctx := getCursor(query, bindVars)
@@ -563,10 +563,10 @@ func lastXPasswords(id uuid.UUID) []Password {
 		top = 10
 	}
 
-	query := "FOR p, e IN 1..@top OUTBOUND 'user/@id' secured_by RETURN { _key: p._key, PasswordAndHash: p.PasswordAndHash, Current: e.Current, SecureKey: e._key }"
+	query := "FOR p, e IN 1..@top OUTBOUND @uid secured_by RETURN { _key: p._key, PasswordAndHash: p.PasswordAndHash, Current: e.Current, SecureKey: e._key }"
 	bindVars := map[string]interface{}{
 		"top": top,
-		"id":  id,
+		"uid": "user/" + id.String(),
 	}
 
 	cursor, ctx := getCursor(query, bindVars)
