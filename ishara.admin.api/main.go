@@ -14,17 +14,18 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/jwtauth"
 
 	driver "github.com/arangodb/go-driver"
 	arrHttp "github.com/arangodb/go-driver/http"
 
 	"github.com/google/uuid"
 
-	"github.com/dgrijalva/jwt-go"
+	"./models"
+	"./models/entities"
+	"./services"
 )
 
-var tokenAuth *jwtauth.JWTAuth
+var tokenService services.TokenService
 var client driver.Client
 var db driver.Database
 var graph driver.Graph
@@ -37,21 +38,21 @@ const (
 )
 
 func main() {
+	tokenService = services.NewTokenService()
+
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RedirectSlashes)
 	r.Use(middleware.Logger)
 
 	r.Route("/api", func(rt chi.Router) {
-		rt.Mount("/users", routers())
+		rt.Mount("/users", routers(tokenService))
 	})
 
 	http.ListenAndServe("localhost:5000", r)
 }
 
 func init() {
-	tokenAuth = jwtauth.New("HS512", []byte(os.Getenv("ISHARA_SECRET")), nil)
-
 	var err error
 
 	conn, err := arrHttp.NewConnection(arrHttp.ConnectionConfig{
@@ -79,7 +80,7 @@ func init() {
 	catch(err)
 }
 
-func routers() http.Handler {
+func routers(ts services.TokenService) http.Handler {
 	router := chi.NewRouter()
 
 	router.Group(func(r chi.Router) {
@@ -88,16 +89,16 @@ func routers() http.Handler {
 	})
 
 	router.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator)
+		r.Use(ts.Verifier())
+		r.Use(ts.Authenticator())
 
 		r.Get("/", AllUsers)
 		r.Get("/{id}", GetUserByID)
 		r.Put("/{id}", UpdateUser)
 		r.Delete("/{id}", DeleteUser)
 
-		r.Route("/{userId}/posts", func(rt chi.Router) {
-			rt.Mount("/users", postRouters())
+		r.Route("/{userId}", func(rt chi.Router) {
+			rt.Mount("/posts", postRouters())
 		})
 	})
 
@@ -116,67 +117,6 @@ func postRouters() http.Handler {
 	return r
 }
 
-// models
-
-// UserDto For retrieving data from the client
-type UserDto struct {
-	ID        string `json:"id"`
-	Username  string `json:"username"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Password  string `json:"password"`
-	Biography string `json:"bio"`
-	Token     string `json:"token"`
-}
-
-// User for getting the user data from the database
-type User struct {
-	Key        uuid.UUID `json:"_key"`
-	Username   string
-	FirstName  string
-	LastName   string
-	Biography  string
-	CreatedOn  time.Time
-	ModifiedOn time.Time
-}
-
-// PostDto for getting post data from client
-type PostDto struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Content     string `json:"content"`
-	AuthorID    string `json:"authorId"`
-	PublishedOn string `json:"publishedOn"`
-	ModifiedOn  string `json:"modifiedOn"`
-}
-
-// Post for getting the post data from the database
-type Post struct {
-	Key         uuid.UUID `json:"_key"`
-	Title       string
-	Content     string
-	CreatedOn   time.Time
-	ModifiedOn  time.Time
-	PublishedOn time.Time
-}
-
-// WrittenBy for getting and setting the written by edge rom the database
-type WrittenBy struct {
-	Key  string `json:"_key"`
-	From string `json:"_from"`
-	To   string `json:"_to"`
-}
-
-// Password for getting a password from the database
-type Password struct {
-	Key                 string `json:"_key"`
-	PasswordHashAndSalt []byte
-	Current             bool
-	SecureKey           string
-}
-
-// models
-
 // GetUserByID for getting the user by id
 func GetUserByID(w http.ResponseWriter, r *http.Request) {
 	id, _ := uuid.Parse(chi.URLParam(r, "id"))
@@ -194,35 +134,43 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 
 // AllUsers for getting all the users
 func AllUsers(w http.ResponseWriter, r *http.Request) {
-	var userDtos []map[string]interface{}
-
-	ctx := context.Background()
 	query := "FOR u IN user RETURN { \"id\": u._key, \"firstName\": u.FirstName, \"lastName\": u.LastName, \"username\": u.Username, \"bio\": u.Biography }"
 
-	cursor, err := db.Query(ctx, query, nil)
-	catch(err)
+	userDtos := executeQuery(query, nil)
+
+	respondwithJSON(w, http.StatusOK, userDtos)
+}
+
+func executeQuery(query string, bindVars map[string]interface{}) []map[string]interface{} {
+	cursor, ctx := getCursor(query, bindVars)
+
+	return getValues(ctx, cursor)
+}
+
+func getValues(ctx context.Context, cursor driver.Cursor) []map[string]interface{} {
+	var allItems []map[string]interface{}
 
 	defer cursor.Close()
 	for {
-		var user map[string]interface{}
-		_, err := cursor.ReadDocument(ctx, &user)
+		var item map[string]interface{}
+		_, err := cursor.ReadDocument(ctx, &item)
 		if driver.IsNoMoreDocuments(err) {
 			break
 		} else {
 			catch(err)
 		}
 
-		userDtos = append(userDtos, user)
+		allItems = append(allItems, item)
 	}
 
-	respondwithJSON(w, http.StatusOK, userDtos)
+	return allItems
 }
 
 // UpdateUser for updating a user
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	id, _ := uuid.Parse(chi.URLParam(r, "id"))
 
-	var userDto UserDto
+	var userDto models.UserDto
 	json.NewDecoder(r.Body).Decode(&userDto)
 
 	ctx := context.Background()
@@ -237,7 +185,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := gubu(userDto.Username)
-	emptyUser := User{}
+	emptyUser := entities.User{}
 
 	if (user != emptyUser) && (user.Key != id) {
 		respondwithJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -311,7 +259,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	cursor, ctx := getCursor(query, bindVars)
 
-	var pass Password
+	var pass entities.Password
 
 	defer cursor.Close()
 	for {
@@ -330,13 +278,9 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claim := jwt.MapClaims{
+	token, err := tokenService.Encode(map[string]interface{}{
 		"Username": user.Username,
-	}
-
-	jwtauth.SetExpiryIn(claim, time.Hour)
-
-	_, token, err := tokenAuth.Encode(claim)
+	}, time.Hour)
 	catch(err)
 
 	respondwithJSON(w, http.StatusOK, map[string]string{
@@ -349,7 +293,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 // Register for creating new users (for now)
 func Register(w http.ResponseWriter, r *http.Request) {
-	var userDto UserDto
+	var userDto models.UserDto
 	json.NewDecoder(r.Body).Decode(&userDto)
 
 	ctx := context.Background()
@@ -363,7 +307,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	user := gubu(userDto.Username)
 
-	if (user != User{}) {
+	if (user != entities.User{}) {
 		respondwithJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"message": "Username is already in use! Please choose a different username.",
 		})
@@ -377,7 +321,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser := User{
+	newUser := entities.User{
 		Key:        uuid.New(),
 		Username:   userDto.Username,
 		Biography:  userDto.Biography,
@@ -403,21 +347,28 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 // CreatePost for creating new posts
 func CreatePost(w http.ResponseWriter, r *http.Request) {
-	var postDto PostDto
-	userID := chi.URLParam(r, "userId")
+	var postDto models.PostDto
+	userID, _ := uuid.Parse(chi.URLParam(r, "userId"))
+	user := gubi(userID)
+	if (user == entities.User{}) {
+		respondwithJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"message": "failed to find requested user",
+		})
+		return
+	}
 
 	json.NewDecoder(r.Body).Decode(&postDto)
 
-	post := Post{
-		Key:        uuid.New(),
-		Title:      postDto.Title,
-		Content:    postDto.Content,
-		CreatedOn:  time.Now(),
-		ModifiedOn: time.Now(),
+	post := map[string]interface{}{
+		"_key":       uuid.New(),
+		"Title":      postDto.Title,
+		"Content":    postDto.Content,
+		"CreatedOn":  time.Now(),
+		"ModifiedOn": time.Now(),
 	}
 
 	if postDto.PublishedOn != "" {
-		post.PublishedOn, _ = time.Parse("RFC3339", postDto.PublishedOn)
+		post["PublishedOn"], _ = time.Parse("RFC3339", postDto.PublishedOn)
 	}
 
 	ctx := context.Background()
@@ -430,12 +381,12 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	edge, _, err := graph.EdgeCollection(ctx, "written_by")
 	catch(err)
 
-	writtenBy := WrittenBy{
-		From: meta.ID.String(),
-		To:   "user/" + userID,
+	writtenBy := map[string]string{
+		"_from": meta.ID.String(),
+		"_to":   "user/" + userID.String(),
 	}
 
-	meta, err = edge.CreateDocument(ctx, writtenBy)
+	_, err = edge.CreateDocument(ctx, writtenBy)
 	catch(err)
 
 	respondwithJSON(w, http.StatusCreated, map[string]interface{}{
@@ -447,20 +398,18 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 func AllPosts(w http.ResponseWriter, r *http.Request) {
 	userID, _ := uuid.Parse(chi.URLParam(r, "userId"))
 
-	var postDtos []PostDto
+	var postDtos []models.PostDto
 
-	ctx := context.Background()
 	query := "FOR p IN post FOR u IN 1..1 OUTBOUND p._id written_by FILTER u._key == @userId RETURN { \"Title\": p.Title, \"Content\": p.Content, \"ID\": p._key, \"PublishedOn\": p.PublishedOn, \"ModifiedOn\": p.ModifiedOn, \"AuthorId\": u._key }"
 	bindVars := map[string]interface{}{
 		"userId": userID,
 	}
 
-	cursor, err := db.Query(ctx, query, bindVars)
-	catch(err)
+	cursor, ctx := getCursor(query, bindVars)
 
 	defer cursor.Close()
 	for {
-		var post PostDto
+		var post models.PostDto
 		_, err := cursor.ReadDocument(ctx, &post)
 		if driver.IsNoMoreDocuments(err) {
 			break
@@ -486,13 +435,13 @@ func GetPostByID(w http.ResponseWriter, r *http.Request) {
 
 // UpdatePost for updating a post
 func UpdatePost(w http.ResponseWriter, r *http.Request) {
-	var postDto PostDto
+	var postDto models.PostDto
 	id, _ := uuid.Parse(chi.URLParam(r, "id"))
 	userID, _ := uuid.Parse(chi.URLParam(r, "userId"))
 
 	userPost := gpbi(id, userID)
 
-	if (userPost == PostDto{}) {
+	if (userPost == models.PostDto{}) {
 		respondwithJSON(w, http.StatusBadRequest, map[string]string{
 			"message": "no post for this user with the provided id is available",
 		})
@@ -529,7 +478,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	userID, _ := uuid.Parse(chi.URLParam(r, "userId"))
 
 	userPost := gpbi(id, userID)
-	if (userPost != PostDto{}) {
+	if (userPost != models.PostDto{}) {
 		respondwithJSON(w, http.StatusNoContent, map[string]string{"message": "successfully deleted"})
 		return
 	}
@@ -544,8 +493,8 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	respondwithJSON(w, http.StatusNoContent, map[string]string{"message": "successfully deleted"})
 }
 
-func gubi(id uuid.UUID) User {
-	var user User
+func gubi(id uuid.UUID) entities.User {
+	var user entities.User
 
 	ctx := context.Background()
 	userCol, err := graph.VertexCollection(ctx, "user")
@@ -557,7 +506,7 @@ func gubi(id uuid.UUID) User {
 	return user
 }
 
-func lastXPasswords(id uuid.UUID) []Password {
+func lastXPasswords(id uuid.UUID) []entities.Password {
 	top, err := strconv.ParseInt(os.Getenv("LAST_X_PASSWORD_COUNT"), 10, 32)
 	if err != nil {
 		top = 10
@@ -569,13 +518,14 @@ func lastXPasswords(id uuid.UUID) []Password {
 		"uid": "user/" + id.String(),
 	}
 
-	cursor, ctx := getCursor(query, bindVars)
+	return executeQuery(query, bindVars)
+	/*cursor, ctx := getCursor(query, bindVars)
 
-	var passwords []Password
+	var passwords []entities.Password
 
 	defer cursor.Close()
 	for {
-		var password Password
+		var password entities.Password
 		_, err := cursor.ReadDocument(ctx, &password)
 		if driver.IsNoMoreDocuments(err) {
 			break
@@ -586,7 +536,7 @@ func lastXPasswords(id uuid.UUID) []Password {
 		passwords = append(passwords, password)
 	}
 
-	return passwords
+	return passwords*/
 }
 
 func hashAndSalt(password []byte) ([]byte, error) {
@@ -598,7 +548,7 @@ func hashAndSalt(password []byte) ([]byte, error) {
 	return hash, nil
 }
 
-func gubu(username string) User {
+func gubu(username string) entities.User {
 	query := "FOR u IN user FILTER u.Username == @username RETURN { _key: u._key, FirstName: u.FirstName, LastName: u.LastName, Username: u.Username }"
 	bindVars := map[string]interface{}{
 		"username": username,
@@ -606,7 +556,7 @@ func gubu(username string) User {
 
 	cursor, ctx := getCursor(query, bindVars)
 
-	var user User
+	var user entities.User
 
 	defer cursor.Close()
 	for {
@@ -625,7 +575,7 @@ func gubu(username string) User {
 	return user
 }
 
-func gpbi(id uuid.UUID, userID uuid.UUID) PostDto {
+func gpbi(id uuid.UUID, userID uuid.UUID) models.PostDto {
 	query := "FOR p IN post FOR u IN 1..1 OUTBOUND p._id written_by FILTER p._key == @id and u._key == @userId RETURN { \"Title\": p.Title, \"Content\": p.Content, \"ID\": p._key, \"PublishedOn\": p.PublishedOn, \"ModifiedOn\": p.ModifiedOn, \"AuthorId\": u._key }"
 	bindVars := map[string]interface{}{
 		"id":     id,
@@ -634,7 +584,7 @@ func gpbi(id uuid.UUID, userID uuid.UUID) PostDto {
 
 	cursor, ctx := getCursor(query, bindVars)
 
-	var post PostDto
+	var post models.PostDto
 
 	defer cursor.Close()
 	for {
@@ -660,27 +610,6 @@ func getCursor(query string, bindVars map[string]interface{}) (driver.Cursor, co
 	catch(err)
 
 	return cursor, ctx
-}
-
-func querySingle(query string, bindVars map[string]interface{}, result interface{}) error {
-	ctx := context.Background()
-
-	cursor, err := db.Query(ctx, query, bindVars)
-	if err != nil {
-		return err
-	}
-
-	defer cursor.Close()
-	for {
-		_, err = cursor.ReadDocument(ctx, &result)
-		if err != nil && !driver.IsNoMoreDocuments(err) {
-			return err
-		} else if driver.IsNoMoreDocuments(err) {
-			break
-		}
-	}
-
-	return nil
 }
 
 func updatePassword(id uuid.UUID, password []byte) error {
