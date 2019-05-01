@@ -12,6 +12,6 @@ type PostDto struct {
 	Title       string    `json:"title"`
 	Content     string    `json:"content"`
 	AuthorID    string    `json:"authorId"`
-	PublishedOn string    `json:"publishedOn"`
+	PublishedOn string    `json:"publishedOn,omitempty"`
 	ModifiedOn  time.Time `json:"modifiedOn"`
 }

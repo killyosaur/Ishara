@@ -4,12 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	driver "github.com/arangodb/go-driver"
 )
 
 func catch(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func checkIsNoMoreDocuments(err error) bool {
+	if driver.IsNoMoreDocuments(err) {
+		return true
+	} else {
+		catch(err)
+	}
+
+	return false
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {

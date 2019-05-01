@@ -3,32 +3,27 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
-
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 
 	driver "github.com/arangodb/go-driver"
-	arrHttp "github.com/arangodb/go-driver/http"
 
 	"github.com/google/uuid"
 
+	dataDriver "./data"
 	"./models"
 	"./models/entities"
 	"./services"
 )
 
 var tokenService services.TokenService
-var client driver.Client
-var db driver.Database
-var graph driver.Graph
+var passwordService services.PasswordService
+var dbDriver *dataDriver.Arango
 
 const (
 	dbName    = "IsharaDB"
@@ -38,7 +33,19 @@ const (
 )
 
 func main() {
+	var err error
+	dbDriver, err = dataDriver.Connect(models.ConnectionOptions{
+		DatabaseName: dbName,
+		GraphName:    graphName,
+		Host:         dbHost,
+		Port:         dbPort,
+		Username:     os.Getenv("DB_USER"),
+		Password:     os.Getenv("DB_PWRD"),
+	})
+	catch(err)
+
 	tokenService = services.NewTokenService()
+	passwordService = services.NewPasswordService(dbDriver)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
@@ -50,34 +57,6 @@ func main() {
 	})
 
 	http.ListenAndServe("localhost:5000", r)
-}
-
-func init() {
-	var err error
-
-	conn, err := arrHttp.NewConnection(arrHttp.ConnectionConfig{
-		Endpoints: []string{fmt.Sprintf("http://%s:%d", dbHost, dbPort)},
-	})
-
-	catch(err)
-
-	user := os.Getenv("DB_USER")
-	pwd := os.Getenv("DB_PWRD")
-	auth := driver.JWTAuthentication(user, pwd)
-
-	client, err = driver.NewClient(driver.ClientConfig{
-		Connection:     conn,
-		Authentication: auth,
-	})
-
-	catch(err)
-
-	ctx := context.Background()
-	db, err = client.Database(ctx, dbName)
-	catch(err)
-
-	graph, err = db.Graph(ctx, graphName)
-	catch(err)
 }
 
 func routers(ts services.TokenService) http.Handler {
@@ -135,35 +114,24 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 // AllUsers for getting all the users
 func AllUsers(w http.ResponseWriter, r *http.Request) {
 	query := "FOR u IN user RETURN { \"id\": u._key, \"firstName\": u.FirstName, \"lastName\": u.LastName, \"username\": u.Username, \"bio\": u.Biography }"
+	var allUsers []models.UserDto
+	ctx := context.Background()
 
-	userDtos := executeQuery(query, nil)
-
-	respondwithJSON(w, http.StatusOK, userDtos)
-}
-
-func executeQuery(query string, bindVars map[string]interface{}) []map[string]interface{} {
-	cursor, ctx := getCursor(query, bindVars)
-
-	return getValues(ctx, cursor)
-}
-
-func getValues(ctx context.Context, cursor driver.Cursor) []map[string]interface{} {
-	var allItems []map[string]interface{}
+	cursor := dbDriver.GetCursor(ctx, query, nil)
 
 	defer cursor.Close()
 	for {
-		var item map[string]interface{}
+		item := models.UserDto{}
+
 		_, err := cursor.ReadDocument(ctx, &item)
-		if driver.IsNoMoreDocuments(err) {
+		if dbDriver.IsNoMoreDocuments(err) {
 			break
-		} else {
-			catch(err)
 		}
 
-		allItems = append(allItems, item)
+		allUsers = append(allUsers, item)
 	}
 
-	return allItems
+	respondwithJSON(w, http.StatusOK, allUsers)
 }
 
 // UpdateUser for updating a user
@@ -197,15 +165,17 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userDto.Password != "" {
-		password := []byte(userDto.Password)
-		err := updatePassword(id, password)
-		respondwithJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"message": err,
-		})
-		return
+		err := passwordService.Update(ctx, id, userDto.Password)
+
+		if err != nil {
+			respondwithJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"message": err,
+			})
+			return
+		}
 	}
 
-	userCol, err := graph.VertexCollection(ctx, "user")
+	userCol, err := dbDriver.VertexCollection(ctx, "user")
 	catch(err)
 
 	meta, err := userCol.UpdateDocument(ctx, id.String(), patch)
@@ -227,7 +197,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		"InActive":  true,
 	}
 
-	userCol, err := graph.VertexCollection(ctx, "user")
+	userCol, err := dbDriver.VertexCollection(ctx, "user")
 	catch(err)
 
 	meta, err := userCol.UpdateDocument(ctx, id.String(), patch)
@@ -252,26 +222,9 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	user := gubu(jsonObj["Username"])
 
-	query := "FOR p, s IN 1..1 OUTBOUND @uid secured_by FILTER s.Current == true RETURN { _key: p._key, PasswordHashAndSalt: p.PasswordHashAndSalt, Current: s.Current, SecureKey: s._key }"
-	bindVars := map[string]interface{}{
-		"uid": "user/" + user.Key.String(),
-	}
+	pass, _ := passwordService.Get(nil, user.Key)
 
-	cursor, ctx := getCursor(query, bindVars)
-
-	var pass entities.Password
-
-	defer cursor.Close()
-	for {
-		_, err := cursor.ReadDocument(ctx, &pass)
-		if driver.IsNoMoreDocuments(err) {
-			break
-		} else {
-			catch(err)
-		}
-	}
-
-	if !passwordCompare(pass.PasswordHashAndSalt, []byte(jsonObj["Password"])) {
+	if pass == nil || !passwordService.Compare(pass.PasswordHashAndSalt, jsonObj["Password"]) {
 		respondwithJSON(w, http.StatusBadRequest, map[string]string{
 			"message": "Username or Password is incorrect",
 		})
@@ -331,13 +284,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		ModifiedOn: time.Now(),
 	}
 
-	userCol, err := graph.VertexCollection(ctx, "user")
+	userCol, err := dbDriver.VertexCollection(ctx, "user")
 	catch(err)
 
 	_, err = userCol.CreateDocument(ctx, newUser)
 	catch(err)
 
-	_, err = createPassword(newUser.Key, []byte(userDto.Password))
+	_, err = passwordService.Create(ctx, newUser.Key, userDto.Password)
 	catch(err)
 
 	respondwithJSON(w, http.StatusCreated, map[string]interface{}{
@@ -372,13 +325,13 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	col, err := graph.VertexCollection(ctx, "post")
+	col, err := dbDriver.VertexCollection(ctx, "post")
 	catch(err)
 
 	meta, err := col.CreateDocument(ctx, post)
 	catch(err)
 
-	edge, _, err := graph.EdgeCollection(ctx, "written_by")
+	edge, _, err := dbDriver.EdgeCollection(ctx, "written_by")
 	catch(err)
 
 	writtenBy := map[string]string{
@@ -405,16 +358,16 @@ func AllPosts(w http.ResponseWriter, r *http.Request) {
 		"userId": userID,
 	}
 
-	cursor, ctx := getCursor(query, bindVars)
+	ctx := context.Background()
+
+	cursor := dbDriver.GetCursor(ctx, query, bindVars)
 
 	defer cursor.Close()
 	for {
 		var post models.PostDto
 		_, err := cursor.ReadDocument(ctx, &post)
-		if driver.IsNoMoreDocuments(err) {
+		if dbDriver.IsNoMoreDocuments(err) {
 			break
-		} else {
-			catch(err)
 		}
 
 		postDtos = append(postDtos, post)
@@ -451,7 +404,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&postDto)
 
 	ctx := context.Background()
-	posts, err := graph.VertexCollection(ctx, "post")
+	posts, err := dbDriver.VertexCollection(ctx, "post")
 	catch(err)
 
 	postPatch := map[string]interface{}{
@@ -484,7 +437,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	posts, err := graph.VertexCollection(ctx, "post")
+	posts, err := dbDriver.VertexCollection(ctx, "post")
 	catch(err)
 
 	_, err = posts.RemoveDocument(ctx, id.String())
@@ -497,7 +450,7 @@ func gubi(id uuid.UUID) entities.User {
 	var user entities.User
 
 	ctx := context.Background()
-	userCol, err := graph.VertexCollection(ctx, "user")
+	userCol, err := dbDriver.VertexCollection(ctx, "user")
 	catch(err)
 
 	_, err = userCol.ReadDocument(ctx, id.String(), &user)
@@ -506,69 +459,23 @@ func gubi(id uuid.UUID) entities.User {
 	return user
 }
 
-func lastXPasswords(id uuid.UUID) []entities.Password {
-	top, err := strconv.ParseInt(os.Getenv("LAST_X_PASSWORD_COUNT"), 10, 32)
-	if err != nil {
-		top = 10
-	}
-
-	query := "FOR p, e IN 1..@top OUTBOUND @uid secured_by RETURN { _key: p._key, PasswordAndHash: p.PasswordAndHash, Current: e.Current, SecureKey: e._key }"
-	bindVars := map[string]interface{}{
-		"top": top,
-		"uid": "user/" + id.String(),
-	}
-
-	return executeQuery(query, bindVars)
-	/*cursor, ctx := getCursor(query, bindVars)
-
-	var passwords []entities.Password
-
-	defer cursor.Close()
-	for {
-		var password entities.Password
-		_, err := cursor.ReadDocument(ctx, &password)
-		if driver.IsNoMoreDocuments(err) {
-			break
-		} else {
-			catch(err)
-		}
-
-		passwords = append(passwords, password)
-	}
-
-	return passwords*/
-}
-
-func hashAndSalt(password []byte) ([]byte, error) {
-	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-
-	return hash, nil
-}
-
 func gubu(username string) entities.User {
 	query := "FOR u IN user FILTER u.Username == @username RETURN { _key: u._key, FirstName: u.FirstName, LastName: u.LastName, Username: u.Username }"
 	bindVars := map[string]interface{}{
 		"username": username,
 	}
 
-	cursor, ctx := getCursor(query, bindVars)
+	ctx := context.Background()
+
+	cursor := dbDriver.GetCursor(ctx, query, bindVars)
 
 	var user entities.User
 
 	defer cursor.Close()
 	for {
-		meta, err := cursor.ReadDocument(ctx, &user)
-		if driver.IsNoMoreDocuments(err) {
+		_, err := cursor.ReadDocument(ctx, &user)
+		if dbDriver.IsNoMoreDocuments(err) {
 			break
-		} else {
-			catch(err)
-		}
-
-		if (meta != driver.DocumentMeta{}) {
-			// testing the metadata
 		}
 	}
 
@@ -582,17 +489,17 @@ func gpbi(id uuid.UUID, userID uuid.UUID) models.PostDto {
 		"userId": userID,
 	}
 
-	cursor, ctx := getCursor(query, bindVars)
+	ctx := context.Background()
+
+	cursor := dbDriver.GetCursor(ctx, query, bindVars)
 
 	var post models.PostDto
 
 	defer cursor.Close()
 	for {
 		meta, err := cursor.ReadDocument(ctx, &post)
-		if driver.IsNoMoreDocuments(err) {
+		if dbDriver.IsNoMoreDocuments(err) {
 			break
-		} else {
-			catch(err)
 		}
 
 		if (meta != driver.DocumentMeta{}) {
@@ -601,101 +508,4 @@ func gpbi(id uuid.UUID, userID uuid.UUID) models.PostDto {
 	}
 
 	return post
-}
-
-func getCursor(query string, bindVars map[string]interface{}) (driver.Cursor, context.Context) {
-	ctx := context.Background()
-
-	cursor, err := db.Query(ctx, query, bindVars)
-	catch(err)
-
-	return cursor, ctx
-}
-
-func updatePassword(id uuid.UUID, password []byte) error {
-	ctx := context.Background()
-	passwords := lastXPasswords(id)
-
-	alreadyUsed := false
-	var currentID string
-
-	for _, element := range passwords {
-		if passwordCompare(element.PasswordHashAndSalt, password) {
-			alreadyUsed = true
-			break
-		}
-
-		if element.Current {
-			currentID = element.SecureKey
-		}
-	}
-
-	if alreadyUsed {
-		return errors.New("Password was already used, please try a different password")
-	}
-
-	sEdge, _, err := graph.EdgeCollection(ctx, "secured_by")
-	if err != nil {
-		return err
-	}
-
-	meta, err := createPassword(id, password)
-	if err != nil {
-		return err
-	}
-
-	_, err = sEdge.UpdateDocument(ctx, currentID, map[string]interface{}{
-		"Current": false,
-		"_from":   meta.ID,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func passwordCompare(hashedPwd []byte, plainPwd []byte) bool {
-	err := bcrypt.CompareHashAndPassword(hashedPwd, plainPwd)
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
-func createPassword(id uuid.UUID, password []byte) (driver.DocumentMeta, error) {
-	emptyDocMeta := driver.DocumentMeta{}
-	ctx := context.Background()
-	sEdge, _, err := graph.EdgeCollection(ctx, "secured_by")
-	if err != nil {
-		return emptyDocMeta, err
-	}
-
-	pwdCol, err := graph.VertexCollection(ctx, "password")
-	if err != nil {
-		return emptyDocMeta, err
-	}
-
-	hashedPwd, err := hashAndSalt(password)
-	if err != nil {
-		return emptyDocMeta, err
-	}
-
-	pwd := map[string]interface{}{
-		"PasswordHashAndSalt": hashedPwd,
-		"CreatedOn":           time.Now(),
-	}
-	meta, err := pwdCol.CreateDocument(ctx, pwd)
-	if err != nil {
-		return emptyDocMeta, err
-	}
-
-	_, err = sEdge.CreateDocument(ctx, map[string]interface{}{
-		"_to":     meta.ID,
-		"_from":   "user/" + id.String(),
-		"Current": true,
-	})
-
-	return meta, err
 }
