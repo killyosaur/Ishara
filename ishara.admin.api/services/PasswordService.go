@@ -10,12 +10,12 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	dataDriver "../data"
+	"../data"
 	"../models/entities"
 )
 
 // NewPasswordService ...
-func NewPasswordService(dbConn *dataDriver.Arango) PasswordService {
+func NewPasswordService(dbConn *data.Driver) PasswordService {
 	passwordService := PasswordService{
 		dbConn: dbConn,
 	}
@@ -25,7 +25,7 @@ func NewPasswordService(dbConn *dataDriver.Arango) PasswordService {
 
 // PasswordService the service for managing passwords
 type PasswordService struct {
-	dbConn *dataDriver.Arango
+	dbConn *data.Driver
 }
 
 // Get ...
@@ -48,7 +48,7 @@ func (p *PasswordService) Get(ctx context.Context, id uuid.UUID) (*entities.Pass
 		_, err := cursor.ReadDocument(ctx, &pass)
 		if p.dbConn.IsNoMoreDocuments(err) {
 			break
-		} else {
+		} else if err != nil {
 			return nil, err
 		}
 	}
