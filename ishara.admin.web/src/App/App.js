@@ -2,19 +2,21 @@
 import React, { Component } from 'react';
 import { Router, Route } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { Grid, Paper, withStyles } from '@material-ui/core';
+import { Grid, withStyles, createStyles } from '@material-ui/core';
+import { SnackbarProvider, withSnackbar } from 'notistack';
 
 import { history } from '../_helpers';
 import { alertActions } from '../_actions';
 import { PrivateRoute } from '../_components';
 import { HomePage } from '../HomePage';
 import { LoginPage } from '../LoginPage';
-import { RegisterPage } from '../RegisterPage';
-import './App.css';
 
-const styles = /** @param {any} theme */theme => ({
+const styles = createStyles({
   root: {
-    flexGrow: 1
+    flexGrow: 1,
+    position: 'relative',
+    height: '100%',
+    display: 'flex'
   }
 });
 
@@ -34,22 +36,21 @@ class App extends Component {
     const { alert, classes } = this.props;
 
     return (
-      <Grid container className={classes.root} spacing={16}>
-        <Grid item xs={12}>
-          <Paper>
+      <React.Fragment>
+        <Grid container className={classes.root}>
             { alert.message && 
               <div className={`alert ${alert.type}`}>{alert.message}</div>
             }
             <Router history={history}>
-              <div>
-                <PrivateRoute exact path="/" component={HomePage} />
-                <Route path="/login" component={LoginPage} />
-                <Route path="/register" component={RegisterPage} />
-              </div>
+              <Grid item xs={12}>
+                  <Route path="/login" component={LoginPage} />
+                  <PrivateRoute exact path="/" component={HomePage} />
+                  <PrivateRoute exact path="/user/:userId?" component={HomePage} />
+                  <PrivateRoute exact path="/post/:postId?" component={HomePage} />
+              </Grid>
             </Router>
-          </Paper>
         </Grid>
-      </Grid>
+      </React.Fragment>
     );
   }
 }
@@ -61,6 +62,16 @@ function mapStateToProps(state) {
   };
 }
 
-const styledComponent = withStyles(styles)(App);
-const connectedApp = connect(mapStateToProps)(styledComponent);
-export { connectedApp as App};
+const SnackApp = withSnackbar(App);
+const StyledComponent = withStyles(styles)(SnackApp);
+const ConnectedApp = connect(mapStateToProps)(StyledComponent);
+
+function IntegrationNotistack() {
+  return (
+    <SnackbarProvider maxSnack={1}>
+      <ConnectedApp />
+    </SnackbarProvider>
+  );
+}
+
+export { IntegrationNotistack as App};

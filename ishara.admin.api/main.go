@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 
 	"./controllers"
 	"./data"
@@ -45,6 +46,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RedirectSlashes)
 	r.Use(middleware.Logger)
+	r.Use(getCors())
 
 	r.Route("/api", func(rt chi.Router) {
 		rt.Mount("/users", routers(&tokenService, userController, postController))
@@ -53,12 +55,23 @@ func main() {
 	http.ListenAndServe("localhost:5000", r)
 }
 
+func getCors() func(next http.Handler) http.Handler {
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	})
+
+	return cors.Handler
+}
+
 func routers(ts *services.TokenService, uc *controllers.UserController, pc *controllers.PostController) http.Handler {
 	router := chi.NewRouter()
 
 	router.Group(func(r chi.Router) {
 		r.Post("/authenticate", uc.Authenticate)
-		r.Post("/register", uc.Register)
 	})
 
 	router.Group(func(r chi.Router) {
@@ -69,6 +82,7 @@ func routers(ts *services.TokenService, uc *controllers.UserController, pc *cont
 		r.Get("/{id}", uc.GetByID)
 		r.Put("/{id}", uc.Update)
 		r.Delete("/{id}", uc.Delete)
+		r.Post("/register", uc.Register)
 
 		r.Mount("/{userId}/posts", postRouters(pc))
 	})

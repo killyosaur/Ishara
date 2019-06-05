@@ -1,8 +1,9 @@
 // @ts-check
 import { authHeader } from '../_helpers';
 import { handleResponse } from './handleResponse';
+import settings from '../settings.js';
 
-const apiUrl = 'https://localhost:5001/api';
+const apiUrl = settings.api;
 
 export const userService = {
     login,
@@ -47,7 +48,7 @@ async function getAll() {
     return handleResponse(response, logout);
 }
 
-/** @param {number} id */
+/** @param {string} id */
 async function getById(id) {
     const requestOptions = {
         method: 'GET',
@@ -62,7 +63,7 @@ async function getById(id) {
 async function register(user) {
     const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
     };
 
@@ -83,7 +84,7 @@ async function update(user) {
 }
 
 // prefixed function name with underscore because delete is a reserved word in javascript
-/** @param {number} id */
+/** @param {string} id */
 async function _delete(id) {
     const requestOptions = {
         method: 'DELETE',

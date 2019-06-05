@@ -58,7 +58,7 @@ function register(user) {
                 /** @param {any} user */
                 user => {
                     dispatch(success(user));
-                    history.push('/login');
+                    history.push('/user');
                     dispatch(alertActions.success('Registration successful'));
                 },
                 /** @param {Error} error */
@@ -98,7 +98,7 @@ function register(user) {
     }
 
     // prefixed function name with underscore because delete is a reserved word in javascript
-    /** @param {number} id */
+    /** @param {string} id */
     function _delete(id) {
         return /** @param {Function} dispatch */ dispatch => {
             dispatch(request(id));
@@ -112,12 +112,12 @@ function register(user) {
                 );
         };
 
-        /** @param {number} id */
+        /** @param {string} id */
         function request(id) { return { type: userConstants.DELETE_REQUEST, id } }
-        /** @param {number} id */
+        /** @param {string} id */
         function success(id) { return { type: userConstants.DELETE_SUCCESS, id } }
         /**
-         * @param {number} id 
+         * @param {string} id 
          * @param {string} error
          */
         function failure(id, error) { return { type: userConstants.DELETE_FAILURE, id, error } }

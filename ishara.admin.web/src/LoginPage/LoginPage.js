@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 
 import { userActions } from '../_actions';
 import {Grid, Typography, TextField, Button} from '@material-ui/core';
-import {RegisterLink} from '../_components';
 
 class LoginPage extends Component {
     /** @param {any} props */
@@ -13,25 +12,21 @@ class LoginPage extends Component {
 
         // reset login status
         this.props.dispatch(userActions.logout());
-
-        this.state = {
-            username: '',
-            password: '',
-            submitted: false
-        };
-
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
     }
+    state = {
+        username: '',
+        password: '',
+        submitted: false
+    };
 
     /** @param {any} e */
-    handleChange(e) {
+    handleChange = (e) => {
         const { name, value } = e.target;
         this.setState({ [name]: value });
     }
 
     /** @param {any} e */
-    handleSubmit(e) {
+    handleSubmit = (e) => {
         e.preventDefault();
 
         this.setState({ submitted: true });
@@ -46,37 +41,46 @@ class LoginPage extends Component {
         const { loggingIn } = this.props;
         const { username, password } = this.state;
         return (
-            <Grid>
-                <Typography component="h2">Login</Typography>
+            <Grid container direction="column" alignContent="center" alignItems="center">
+                <Grid item xs={12}>
+                    <Typography component="h1" variant="h2">Login</Typography>
+                </Grid>
                 <form name="form" noValidate autoComplete="off" onSubmit={this.handleSubmit}>
-                    <TextField
-                        id="standard-name"
-                        label="Username"
-                        name="username"
-                        value={username}
-                        onChange={this.handleChange}
-                        margin="normal"
-                        fullWidth
-                        required
-                    />
-                    <TextField
-                        id="outlined-password-input"
-                        label="Password"
-                        type="password"
-                        name="password"
-                        value={password}
-                        onChange={this.handleChange}
-                        autoComplete="current-password"
-                        margin="normal"
-                        fullWidth
-                        required
-                    />
-                    <Button variant="contained" color="primary" type="submit">Login</Button>
-                    {
-                        loggingIn &&
-                        <img alt="logging in" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
-                    }
-                    <Button component={RegisterLink}>Register</Button>
+                    <Grid container spacing={24}>
+                        <Grid item xs={12}>
+                            <TextField
+                                id="standard-name"
+                                label="Username"
+                                name="username"
+                                value={username}
+                                onChange={this.handleChange}
+                                margin="normal"
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                id="outlined-password-input"
+                                label="Password"
+                                type="password"
+                                name="password"
+                                value={password}
+                                onChange={this.handleChange}
+                                autoComplete="current-password"
+                                margin="normal"
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Button variant="contained" color="primary" type="submit">Login</Button>
+                            {
+                                loggingIn &&
+                                <img alt="logging in" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
+                            }
+                        </Grid>
+                    </Grid>
                 </form>
             </Grid>
         );
