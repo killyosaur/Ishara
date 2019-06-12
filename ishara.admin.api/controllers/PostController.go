@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/jwtauth"
 	"github.com/google/uuid"
 
 	driver "github.com/arangodb/go-driver"
@@ -36,7 +37,9 @@ func (postController *PostController) ContextMiddleware(next http.Handler) http.
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := uuid.Parse(chi.URLParam(r, "userId"))
 		user, err := postController.userService.GetByID(userID)
-		if (user == models.UserDto{}) || err != nil {
+		_, claims, _ := jwtauth.FromContext(r.Context())
+
+		if (user == models.UserDto{}) || err != nil || claims["UserID"].(uuid.UUID) != user.ID {
 			BadRequest(w, "failed to find requested user")
 			return
 		}
@@ -89,20 +92,6 @@ func (postController *PostController) All(w http.ResponseWriter, r *http.Request
 	}
 
 	OK(w, postDtos)
-}
-
-// GetByID ...
-func (postController *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
-	id, _ := uuid.Parse(chi.URLParam(r, "id"))
-	user := r.Context().Value(userKey("user")).(models.UserDto)
-
-	postDto, err := postController.postService.GetByID(user, id)
-	if err != nil {
-		errResponse(w, err)
-		return
-	}
-
-	OK(w, postDto)
 }
 
 // Update ...

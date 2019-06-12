@@ -4,7 +4,6 @@ import settings from '../settings.js';
 
 export const postService = {
     getAll,
-    getById,
     create,
     update,
     delete: _delete
@@ -18,17 +17,6 @@ async function getAll(userId) {
     };
 
     const response = await fetch(`${settings.api}/users/${userId}/posts`,requestOptions);
-    return handleResponse(response);
-}
-
-/** @param {string} userId, @param {string} id */
-async function getById(userId, id) {
-    const requestOptions = {
-        method: 'GET',
-        headers: authHeader()
-    };
-
-    const response = await fetch(`${settings.api}/users/${userId}/posts/${id}`,requestOptions);
     return handleResponse(response);
 }
 

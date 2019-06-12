@@ -6,9 +6,6 @@ import (
 	"net/http"
 )
 
-// Controller ...
-type Controller interface{}
-
 // RespondWithJSON ...
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)

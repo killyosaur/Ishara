@@ -79,7 +79,6 @@ func routers(ts *services.TokenService, uc *controllers.UserController, pc *cont
 		r.Use(ts.Authenticator())
 
 		r.Get("/", uc.All)
-		r.Get("/{id}", uc.GetByID)
 		r.Put("/{id}", uc.Update)
 		r.Delete("/{id}", uc.Delete)
 		r.Post("/register", uc.Register)
@@ -96,7 +95,6 @@ func postRouters(pc *controllers.PostController) http.Handler {
 	r.Use(pc.ContextMiddleware)
 
 	r.Get("/", pc.All)
-	r.Get("/{id}", pc.GetByID)
 	r.Post("/", pc.Create)
 	r.Put("/{id}", pc.Update)
 	r.Delete("/{id}", pc.Delete)

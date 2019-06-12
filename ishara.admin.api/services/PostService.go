@@ -41,7 +41,7 @@ func (postService *PostService) Create(userDto models.UserDto, postDto models.Po
 	}
 
 	if postDto.PublishedOn != "" {
-		post.PublishedOn, _ = time.Parse("RFC3339", postDto.PublishedOn)
+		post.PublishedOn = postDto.PublishedOn
 	}
 
 	ctx := context.Background()
@@ -165,7 +165,7 @@ func (postService *PostService) Update(userDto models.UserDto, id uuid.UUID, pos
 	}
 
 	if postDto.PublishedOn != "" {
-		postPatch["PublishedOn"], _ = time.Parse("RFC3339", postDto.PublishedOn)
+		postPatch["PublishedOn"] = postDto.PublishedOn
 	}
 
 	meta, err := posts.UpdateDocument(ctx, id.String(), postPatch)

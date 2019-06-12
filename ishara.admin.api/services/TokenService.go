@@ -22,7 +22,7 @@ type TokenService struct {
 	tokenAuth *jwtauth.JWTAuth
 }
 
-// New creates a new instance of the token service
+// NewTokenService creates a new instance of the token service
 func NewTokenService() TokenService {
 	auth := jwtauth.New("HS512", []byte(os.Getenv("ISHARA_SECRET")), nil)
 

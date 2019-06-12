@@ -161,6 +161,7 @@ func (userService *UserService) Authenticate(userDto models.UserDto) (models.Use
 
 	token, err := userService.tokenService.Encode(map[string]interface{}{
 		"Username": user.Username,
+		"UserID":   user.Key,
 	}, time.Hour)
 
 	if err != nil {

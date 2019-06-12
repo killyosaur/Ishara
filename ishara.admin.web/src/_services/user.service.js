@@ -10,7 +10,6 @@ export const userService = {
     logout,
     register,
     getAll,
-    getById,
     update,
     delete: _delete
 };
@@ -45,17 +44,6 @@ async function getAll() {
     };
 
     const response = await fetch(`${apiUrl}/users`,requestOptions);
-    return handleResponse(response, logout);
-}
-
-/** @param {string} id */
-async function getById(id) {
-    const requestOptions = {
-        method: 'GET',
-        headers: authHeader()
-    };
-
-    const response = await fetch(`${apiUrl}/users/${id}`,requestOptions);
     return handleResponse(response, logout);
 }
 

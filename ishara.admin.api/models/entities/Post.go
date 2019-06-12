@@ -13,5 +13,5 @@ type Post struct {
 	Content     string
 	CreatedOn   time.Time
 	ModifiedOn  time.Time
-	PublishedOn time.Time `json:"PublishedOn,omitempty"`
+	PublishedOn string `json:"PublishedOn,omitempty"`
 }

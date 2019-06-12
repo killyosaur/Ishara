@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/jwtauth"
 	"github.com/google/uuid"
 
 	"../models"
@@ -21,6 +22,19 @@ func NewUserController(userService *services.UserService) *UserController {
 	return &UserController{
 		userService: userService,
 	}
+}
+
+// ContextMiddleware ...
+func (userController UserController) ContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, claims, _ := jwtauth.FromContext(r.Context())
+
+		_, err := userController.userService.GetByID(claims["UserID"].(uuid.UUID))
+
+		if err != nil {
+			panic(err)
+		}
+	})
 }
 
 // Authenticate ...
@@ -79,19 +93,6 @@ func (userController UserController) Delete(w http.ResponseWriter, r *http.Reque
 		BadRequest(w, err.Error())
 	} else {
 		NoContent(w)
-	}
-}
-
-// GetByID ...
-func (userController UserController) GetByID(w http.ResponseWriter, r *http.Request) {
-	id, _ := uuid.Parse(chi.URLParam(r, "id"))
-
-	user, err := userController.userService.GetByID(id)
-
-	if err != nil {
-		NotFound(w, "Could not find user")
-	} else {
-		OK(w, user)
 	}
 }
 
