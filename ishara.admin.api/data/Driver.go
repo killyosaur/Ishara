@@ -6,8 +6,6 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	http "github.com/arangodb/go-driver/http"
-
-	"../models"
 )
 
 // Driver ...
@@ -16,9 +14,21 @@ type Driver struct {
 	Graph    driver.Graph
 }
 
-// GetCursor ...
-func (arango *Driver) GetCursor(ctx context.Context, query string, bindVars map[string]interface{}) driver.Cursor {
+// Query ...
+func (arango *Driver) Query(ctx context.Context, query string, bindVars map[string]interface{}) driver.Cursor {
 	cursor, err := arango.database.Query(ctx, query, bindVars)
+	if err != nil {
+		panic(err)
+	}
+
+	return cursor
+}
+
+// QueryWithCount ...
+func (arango *Driver) QueryWithCount(ctx context.Context, query string, bindVars map[string]interface{}) driver.Cursor {
+	countCtx := driver.WithQueryCount(ctx)
+
+	cursor, err := arango.database.Query(countCtx, query, bindVars)
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +60,7 @@ func (arango *Driver) VertexCollection(ctx context.Context, name string) (driver
 var dbConn = &Driver{}
 
 // Connect ...
-func Connect(options models.ConnectionOptions) (*Driver, error) {
+func Connect(options ConnectionOptions) (*Driver, error) {
 	var err error
 
 	conn, err := http.NewConnection(http.ConnectionConfig{
@@ -87,4 +97,14 @@ func Connect(options models.ConnectionOptions) (*Driver, error) {
 	dbConn.Graph = graph
 
 	return dbConn, nil
+}
+
+// ConnectionOptions ...
+type ConnectionOptions struct {
+	Password     string
+	Username     string
+	DatabaseName string
+	GraphName    string
+	Port         int64
+	Host         string
 }

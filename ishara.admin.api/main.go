@@ -7,11 +7,11 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/jwtauth"
 
-	"./controllers"
 	"./data"
-	"./models"
-	"./services"
+	"./posts"
+	"./users"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 
 func main() {
 	var err error
-	dbDriver, err := data.Connect(models.ConnectionOptions{
+	dbDriver, err := data.Connect(data.ConnectionOptions{
 		DatabaseName: dbName,
 		GraphName:    graphName,
 		Host:         dbHost,
@@ -35,13 +35,6 @@ func main() {
 		panic(err)
 	}
 
-	tokenService := services.NewTokenService()
-	passwordService := services.NewPasswordService(dbDriver)
-	userService := services.NewUserService(dbDriver, passwordService, tokenService)
-	postService := services.NewPostService(dbDriver)
-	userController := controllers.NewUserController(userService)
-	postController := controllers.NewPostController(postService, userService)
-
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RedirectSlashes)
@@ -49,7 +42,7 @@ func main() {
 	r.Use(getCors())
 
 	r.Route("/api", func(rt chi.Router) {
-		rt.Mount("/users", routers(&tokenService, userController, postController))
+		rt.Mount("/users", routers(dbDriver))
 	})
 
 	http.ListenAndServe("localhost:5000", r)
@@ -67,37 +60,38 @@ func getCors() func(next http.Handler) http.Handler {
 	return cors.Handler
 }
 
-func routers(ts *services.TokenService, uc *controllers.UserController, pc *controllers.PostController) http.Handler {
+func routers(dbDriver *data.Driver) http.Handler {
 	router := chi.NewRouter()
+	auth := jwtauth.New("HS512", []byte(os.Getenv("ISHARA_SECRET")), nil)
 
 	router.Group(func(r chi.Router) {
-		r.Post("/authenticate", uc.Authenticate)
+		r.Post("/authenticate", users.Authenticate(auth, dbDriver))
 	})
 
 	router.Group(func(r chi.Router) {
-		r.Use(ts.Verifier())
-		r.Use(ts.Authenticator())
+		r.Use(jwtauth.Verifier(auth))
+		r.Use(jwtauth.Authenticator)
 
-		r.Get("/", uc.All)
-		r.Put("/{id}", uc.Update)
-		r.Delete("/{id}", uc.Delete)
-		r.Post("/register", uc.Register)
+		r.Get("/", users.Get(dbDriver))
+		r.Put("/{id}", users.Update(dbDriver))
+		r.Delete("/{id}", users.Delete(dbDriver))
+		r.Post("/", users.Create(dbDriver))
 
-		r.Mount("/{userId}/posts", postRouters(pc))
+		r.Mount("/{userId}/posts", postRouters(dbDriver))
 	})
 
 	return router
 }
 
-func postRouters(pc *controllers.PostController) http.Handler {
+func postRouters(dbDriver *data.Driver) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(pc.ContextMiddleware)
+	r.Use(posts.ContextMiddleware(dbDriver))
 
-	r.Get("/", pc.All)
-	r.Post("/", pc.Create)
-	r.Put("/{id}", pc.Update)
-	r.Delete("/{id}", pc.Delete)
+	r.Get("/", posts.Get(dbDriver))
+	r.Post("/", posts.Create(dbDriver))
+	r.Put("/{id}", posts.Update(dbDriver))
+	r.Delete("/{id}", posts.Delete(dbDriver))
 
 	return r
 }
