@@ -31,7 +31,7 @@ func Delete(dbDriver *data.Driver) http.HandlerFunc {
 }
 
 func deletePost(dbDriver *data.Driver, userID uuid.UUID, postID uuid.UUID) error {
-	if checkIfPostExists(dbDriver, userID, postID) {
+	if !checkIfPostExists(dbDriver, userID, postID) {
 		return nil
 	}
 

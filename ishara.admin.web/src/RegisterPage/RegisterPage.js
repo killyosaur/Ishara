@@ -8,7 +8,7 @@ import { userActions } from '../_actions';
 
 class RegisterPage extends Component {
     state = {
-        user: {
+        editUser: {
             firstName: '',
             lastName: '',
             username: '',
@@ -29,20 +29,20 @@ class RegisterPage extends Component {
 
     /**
      * @param {any} prevProps
-     * @param {{ user: { id: any; }; }} prevState
+     * @param {{ editUser: { id: any; }; }} prevState
      */
     componentDidUpdate(prevProps, prevState) {
         const { userId } = this.props.match.params;
         const { users } = this.props;
 
-        if (users.items && userId !== prevState.user.id) {
+        if (users.items && userId !== prevState.editUser.id) {
             this.updateUserState(userId);
         }
     }
 
     updateUserState = (/** @param {string} userId */userId) => {
         const { users } = this.props;
-        const user = users.items.filter(/** @param {{ id: string }} u */u => u.id === userId)[0] || {
+        const editUser = users.items.filter(/** @param {{ id: string }} u */u => u.id === userId)[0] || {
             firstName: '',
             lastName: '',
             username: '',
@@ -52,7 +52,7 @@ class RegisterPage extends Component {
 
         this.setState({
             user: {
-                ...user,
+                ...editUser,
                 password: ''
             }
         });
@@ -61,10 +61,10 @@ class RegisterPage extends Component {
     /** @param {any} e */
     handleChange = (e) => {
         const { name, value } = e.target;
-        const { user } = this.state;
+        const { editUser } = this.state;
         this.setState({
-            user: {
-                ...user,
+            editUser: {
+                ...editUser,
                 [name]: value
             }
         });
@@ -75,16 +75,16 @@ class RegisterPage extends Component {
         e.preventDefault();
 
         this.setState({ submitted: true });
-        const { user } = this.state;
-        const { dispatch } = this.props;
-        if(user.firstName && user.lastName && user.username && user.password) {
-            dispatch(userActions.register(user));
+        const { editUser } = this.state;
+        const { dispatch, user } = this.props;
+        if(editUser.firstName && editUser.lastName && editUser.username && editUser.password) {
+            dispatch(userActions.register(user.id, editUser));
         }
     }
 
     render() {
         const { registering } = this.props;
-        const { user } = this.state;
+        const { editUser } = this.state;
 
         return (
             <Grid>
@@ -94,7 +94,7 @@ class RegisterPage extends Component {
                         id="standard-firstname"
                         label="First Name"
                         name="firstName"
-                        value={user.firstName}
+                        value={editUser.firstName}
                         onChange={this.handleChange}
                         margin="normal"
                         fullWidth
@@ -104,7 +104,7 @@ class RegisterPage extends Component {
                         id="standard-lastname"
                         label="Last Name"
                         name="lastName"
-                        value={user.lastName}
+                        value={editUser.lastName}
                         onChange={this.handleChange}
                         margin="normal"
                         fullWidth
@@ -114,7 +114,7 @@ class RegisterPage extends Component {
                         id="standard-username"
                         label="Username"
                         name="username"
-                        value={user.username}
+                        value={editUser.username}
                         onChange={this.handleChange}
                         margin="normal"
                         fullWidth
@@ -125,7 +125,7 @@ class RegisterPage extends Component {
                         label="Password"
                         type="password"
                         name="password"
-                        value={user.password}
+                        value={editUser.password}
                         onChange={this.handleChange}
                         autoComplete="current-password"
                         margin="normal"
@@ -146,10 +146,11 @@ class RegisterPage extends Component {
 
 /** @param {any} state */
 function mapStateToProps(state) {
-    const { users } = state;
+    const { users, user } = state;
     const { registering } = state.registration;
     return {
         users,
+        user,
         registering
     };
 }

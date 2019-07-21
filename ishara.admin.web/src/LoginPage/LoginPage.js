@@ -13,6 +13,7 @@ class LoginPage extends Component {
         // reset login status
         this.props.dispatch(userActions.logout());
     }
+
     state = {
         username: '',
         password: '',
@@ -35,6 +36,10 @@ class LoginPage extends Component {
         if(username && password) {
             dispatch(userActions.login(username, password));
         }
+        this.setState({
+            username: "",
+            password: ""
+        })
     }
 
     render() {
@@ -46,7 +51,7 @@ class LoginPage extends Component {
                     <Typography component="h1" variant="h2">Login</Typography>
                 </Grid>
                 <form name="form" noValidate autoComplete="off" onSubmit={this.handleSubmit}>
-                    <Grid container spacing={24}>
+                    <Grid container spacing={2}>
                         <Grid item xs={12}>
                             <TextField
                                 id="standard-name"

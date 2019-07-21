@@ -41,7 +41,7 @@ func Update(dbDriver *data.Driver) http.HandlerFunc {
 }
 
 func updatePost(dbDriver *data.Driver, userID uuid.UUID, postID uuid.UUID, postDto UpdatePostDto) error {
-	if checkForPost(dbDriver, userID, postID) {
+	if !checkForPost(dbDriver, userID, postID) {
 		return errors.New("no post for this user with the provided id is available")
 	}
 
@@ -72,8 +72,8 @@ func updatePost(dbDriver *data.Driver, userID uuid.UUID, postID uuid.UUID, postD
 func checkForPost(dbDriver *data.Driver, userID uuid.UUID, postID uuid.UUID) bool {
 	query := "FOR p IN post FOR u IN 1..1 OUTBOUND p._id written_by FILTER p._key == @id and u._key == @userId RETURN { \"Title\": p.Title, \"Content\": p.Content, \"ID\": p._key, \"PublishedOn\": p.PublishedOn, \"ModifiedOn\": p.ModifiedOn, \"AuthorId\": u._key }"
 	bindVars := map[string]interface{}{
-		"id":     postID,
-		"userId": userID,
+		"id":     postID.String(),
+		"userId": userID.String(),
 	}
 
 	ctx := context.Background()

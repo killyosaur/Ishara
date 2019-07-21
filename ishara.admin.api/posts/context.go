@@ -19,7 +19,9 @@ func ContextMiddleware(dbDriver *data.Driver) func(http.Handler) http.Handler {
 			userID, _ := uuid.Parse(chi.URLParam(r, "userId"))
 			_, claims, _ := jwtauth.FromContext(r.Context())
 
-			if userExists(dbDriver, userID) || claims["UserID"].(uuid.UUID) != userID {
+			claimsID, _ := uuid.Parse(claims["UserID"].(string))
+
+			if !userExists(dbDriver, userID) || claimsID != userID {
 				controllers.BadRequest(w, "invalid request")
 				return
 			}
@@ -30,8 +32,13 @@ func ContextMiddleware(dbDriver *data.Driver) func(http.Handler) http.Handler {
 	}
 }
 
+// UserExists ...
+type UserExists struct {
+	Key uuid.UUID `json:"_key"`
+}
+
 func userExists(dbDriver *data.Driver, id uuid.UUID) bool {
-	userID := uuid.UUID{}
+	user := UserExists{}
 
 	ctx := context.Background()
 	userCol, err := dbDriver.VertexCollection(ctx, "user")
@@ -39,10 +46,10 @@ func userExists(dbDriver *data.Driver, id uuid.UUID) bool {
 		return false
 	}
 
-	_, err = userCol.ReadDocument(ctx, id.String(), &userID)
+	_, err = userCol.ReadDocument(ctx, id.String(), &user)
 	if err != nil {
 		return false
 	}
 
-	return uuid.UUID{} != userID
+	return UserExists{} != user && user.Key == id
 }

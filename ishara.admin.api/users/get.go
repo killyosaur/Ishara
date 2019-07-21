@@ -33,7 +33,7 @@ func Get(dbDriver *data.Driver) http.HandlerFunc {
 }
 
 func getAllUsers(dbDriver *data.Driver) (interface{}, error) {
-	query := "FOR u IN user RETURN { \"id\": u._key, \"firstName\": u.FirstName, \"lastName\": u.LastName, \"username\": u.Username, \"bio\": u.Biography }"
+	query := "FOR u IN user FILTER !u.InActive RETURN { \"id\": u._key, \"firstName\": u.FirstName, \"lastName\": u.LastName, \"username\": u.Username, \"bio\": u.Biography }"
 	var allUsers []GetUserDto
 	ctx := context.Background()
 

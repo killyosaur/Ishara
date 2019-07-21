@@ -16,7 +16,7 @@ async function getAll(userId) {
         headers: authHeader()
     };
 
-    const response = await fetch(`${settings.api}/users/${userId}/posts`,requestOptions);
+    const response = await fetch(`${settings.api}/admin/${userId}/posts`,requestOptions);
     return handleResponse(response);
 }
 
@@ -28,7 +28,7 @@ async function create(userId, post) {
         body: JSON.stringify(post)
     };
 
-    const response = await fetch(`${settings.api}/users/${userId}/posts`,requestOptions);
+    const response = await fetch(`${settings.api}/admin/${userId}/posts`,requestOptions);
     return handleResponse(response);
 }
 
@@ -40,7 +40,7 @@ async function update(userId, post) {
         body: JSON.stringify(post)
     };
 
-    const response = await fetch(`${settings.api}/users/${userId}/posts/${post.id}`,requestOptions);
+    const response = await fetch(`${settings.api}/admin/${userId}/posts/${post.id}`,requestOptions);
     return handleResponse(response);
 }
 
@@ -52,6 +52,6 @@ async function _delete(userId, id) {
         headers: authHeader()
     };
 
-    const response = await fetch(`${settings.api}/users/${userId}/posts/${id}`,requestOptions);
+    const response = await fetch(`${settings.api}/admin/${userId}/posts/${id}`,requestOptions);
     return handleResponse(response);
 }

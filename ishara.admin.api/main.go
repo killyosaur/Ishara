@@ -42,7 +42,7 @@ func main() {
 	r.Use(getCors())
 
 	r.Route("/api", func(rt chi.Router) {
-		rt.Mount("/users", routers(dbDriver))
+		rt.Mount("/admin", routers(dbDriver))
 	})
 
 	http.ListenAndServe("localhost:5000", r)
@@ -72,15 +72,24 @@ func routers(dbDriver *data.Driver) http.Handler {
 		r.Use(jwtauth.Verifier(auth))
 		r.Use(jwtauth.Authenticator)
 
-		r.Get("/", users.Get(dbDriver))
-		r.Put("/{id}", users.Update(dbDriver))
-		r.Delete("/{id}", users.Delete(dbDriver))
-		r.Post("/", users.Create(dbDriver))
-
+		r.Mount("/{userId}/users", userRouters(dbDriver))
 		r.Mount("/{userId}/posts", postRouters(dbDriver))
 	})
 
 	return router
+}
+
+func userRouters(dbDriver *data.Driver) http.Handler {
+	r := chi.NewRouter()
+
+	r.Use(users.ContextMiddleware(dbDriver))
+
+	r.Get("/", users.Get(dbDriver))
+	r.Post("/", users.Create(dbDriver))
+	r.Put("/{id}", users.Update(dbDriver))
+	r.Delete("/{id}", users.Delete(dbDriver))
+
+	return r
 }
 
 func postRouters(dbDriver *data.Driver) http.Handler {

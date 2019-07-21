@@ -40,7 +40,7 @@ function login(username, password) {
     /** @param {any} user */
     function success(user) { return { type: userConstants.LOGIN_SUCCESS, user } }
     /** @param {string} error */
-    function failure(error) { return { type: userConstants.LOGIN_REQUEST, error } }
+    function failure(error) { return { type: userConstants.LOGIN_FAILURE, error } }
 }
 
 function logout() {
@@ -48,12 +48,15 @@ function logout() {
     return { type: userConstants.LOGOUT };
 }
 
-/** @param {any} user */
-function register(user) {
+/**
+ * @param {any} user
+ * @param {string} userId
+ */
+function register(userId, user) {
     return /** @param {Function} dispatch */ dispatch => {
         dispatch(request(user));
 
-        userService.register(user)
+        userService.register(userId, user)
             .then(
                 /** @param {any} user */
                 user => {
@@ -77,11 +80,14 @@ function register(user) {
         function failure(error) { return { type: userConstants.REGISTER_FAILURE, error } }
     }
 
-    function getAll() {
+    /**
+     * @param {string} userId
+     */
+    function getAll(userId) {
         return /** @param {Function} dispatch */ dispatch => {
             dispatch(request());
 
-            userService.getAll()
+            userService.getAll(userId)
                 .then(
                     /** @param {any[]} users */
                     users => dispatch(success(users)),
@@ -98,12 +104,15 @@ function register(user) {
     }
 
     // prefixed function name with underscore because delete is a reserved word in javascript
-    /** @param {string} id */
-    function _delete(id) {
+    /**
+     * @param {string} id
+     * @param {string} userId
+     */
+    function _delete(userId, id) {
         return /** @param {Function} dispatch */ dispatch => {
             dispatch(request(id));
 
-            userService.delete(id)
+            userService.delete(userId, id)
                 .then(
                     /** @param {any} user */
                     user => dispatch(success(id)),

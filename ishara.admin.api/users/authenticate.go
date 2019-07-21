@@ -22,6 +22,7 @@ type AuthenticateUserDto struct {
 	Username  string    `json:"username"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
+	IsAdmin   bool      `json:"isAdmin"`
 	Token     string    `json:"token"`
 }
 
@@ -42,15 +43,19 @@ func Authenticate(auth *jwtauth.JWTAuth, dbDriver *data.Driver) http.HandlerFunc
 }
 
 func authenticateService(userDto map[string]string, auth *jwtauth.JWTAuth, dbDriver *data.Driver) (interface{}, error) {
-	if userDto["Username"] == "" || userDto["Password"] == "" {
+	if userDto["username"] == "" || userDto["password"] == "" {
 		return AuthenticateUserDto{}, usernameOrPasswordException()
 	}
 
-	username := userDto["Username"]
-	password := userDto["Password"]
+	username := userDto["username"]
+	password := userDto["password"]
 
 	ctx := context.Background()
 	user := getUser(ctx, dbDriver, username)
+
+	if (user == AuthenticateUserDto{}) {
+		return nil, usernameOrPasswordException()
+	}
 
 	pass, _ := getPassword(ctx, dbDriver, user.ID)
 
@@ -90,7 +95,7 @@ func getEncodedToken(auth *jwtauth.JWTAuth, claim jwt.MapClaims, expiry time.Dur
 }
 
 func getUser(ctx context.Context, dbDriver *data.Driver, username string) AuthenticateUserDto {
-	query := "FOR u IN user FILTER u.Username == @username RETURN { id: u._key, firstName: u.FirstName, lastName: u.LastName, username: u.Username }"
+	query := "FOR u IN user FOR a IN 1..1 OUTBOUND u._id accessed_as FILTER u.Username == @username RETURN { id: u._key, firstName: u.FirstName, lastName: u.LastName, username: u.Username, isAdmin: a.Type == 'Administrator' }"
 	bindVars := map[string]interface{}{
 		"username": username,
 	}

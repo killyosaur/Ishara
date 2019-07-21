@@ -1,21 +1,29 @@
 // @ts-check
 import { alertConstants } from '../_constants';
 
-/** @param {{ type: string; message: string; }} action */
-export function alert(state = {}, action) {
+/** @param {{ type: string; message: string; options: any, key: string }} action */
+export function alert(state = [], action) {
     switch(action.type) {
         case alertConstants.SUCCESS:
-            return {
-                type: 'alert-success',
-                message: action.message
-            };
         case alertConstants.ERROR:
-            return {
-                type: 'alert-danger',
-                message: action.message
-            };
+        case alertConstants.INFORMATION:
+        case alertConstants.WARNING:
+            return [
+                ...state,
+                {
+                    key: action.options.key,
+                    message: action.message,
+                    options: {
+                        ...action.options
+                    }
+                }
+            ];
         case alertConstants.CLEAR:
-            return {};
+            return state.map(n => n.key === action.key ? {...n, dismissed: true} : { ...n });
+        case alertConstants.CLEARALL:
+            return state.map(n => { return {...n, dismissed: true}; });
+        case alertConstants.REMOVE:
+            return state.filter(notification => notification.key !== action.key)
         default:
             return state;
     }

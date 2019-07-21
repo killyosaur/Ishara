@@ -5,23 +5,43 @@ import {
 } from '@material-ui/core';
 import { postActions } from '../_actions';
 
+import 'date-fns';
+import {format, isDate} from 'date-fns';
+import DateFnsUtils from '@date-io/date-fns';
+import {
+  MuiPickersUtilsProvider,
+  KeyboardTimePicker,
+  KeyboardDatePicker,
+} from '@material-ui/pickers';
+
 const styles = theme => createStyles({
     deleteBtn: {
         float: 'right'
     },
     form: {
-        padding: theme.spacing.unit * 2,
+        padding: theme.spacing(2),
         color: theme.palette.text.secondary,
         marginBottom: 10
-    }
+    },
+    grid: {
+        width: '100%',
+    },
+    datePicker: {
+        width: '45%',
+        marginRight: '5%',
+    },
+    timePicker: {
+        width: '45%',
+        marginLeft: '5%',
+    },
 });
 
 const defaultState = {
     title: '',
     content: '',
     modifiedOn: '',
-    publishedOn: '',
-    authorId: ''
+    authorId: '',
+    publishedOn: null
 };
 
 class Form extends Component {
@@ -40,6 +60,7 @@ class Form extends Component {
 
             this.setState({
                 post: {
+                    ...defaultState,
                     ...post
                 }
             });
@@ -49,11 +70,13 @@ class Form extends Component {
     componentDidUpdate(prevProps, prevState) {
         const { postId } = this.props.match.params;
         const {posts} = this.props;
+
         if (posts.items && postId !== prevState.post.id) {
             const post = posts.items.filter(p => p.id === postId)[0] || defaultState;
             
             this.setState({
                 post: {
+                    ...defaultState,
                     ...post
                 },
                 submitted: false
@@ -61,7 +84,7 @@ class Form extends Component {
         }
     }
 
-   handleChangeField = (event) => {
+    handleChangeField = (event) => {
         const { name } = event.currentTarget;
         const { post } = this.state;
 
@@ -69,6 +92,17 @@ class Form extends Component {
             post: {
                 ...post,
                 [name]: event.target.value
+            }
+        });
+    }
+
+    handleChangeDate = (date) => {
+        const { post } = this.state;
+
+        this.setState({
+            post: {
+                ...post,
+                publishedOn: date
             }
         });
     }
@@ -117,8 +151,38 @@ class Form extends Component {
                         fullWidth
                         required
                         multiline
-                        rows="4"
+                        rows="18"
                         value={post.content} />
+                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                        <Grid container className={classes.grid} justify="center">
+                            <KeyboardDatePicker
+                                margin="normal"
+                                id="mui-pickers-date"
+                                label="Date Published On"
+                                name="publishedOn"
+                                className={classes.datePicker}
+                                value={post.publishedOn}
+                                onChange={this.handleChangeDate}
+                                labelFunc={date => isDate(date) ? format(date, 'yyyy-MMM-dd') : ''}
+                                KeyboardButtonProps={{
+                                    'aria-label': 'change date',
+                                }}
+                            />
+                            <KeyboardTimePicker
+                                margin="normal"
+                                id="mui-pickers-time"
+                                label="Time Published On"
+                                name="publishedOn"
+                                className={classes.timePicker}
+                                value={post.publishedOn}
+                                onChange={this.handleChangeDate}
+                                labelFunc={date => isDate(date) ? format(date, 'hh:mm b') : ''}
+                                KeyboardButtonProps={{
+                                    'aria-label': 'change time',
+                                }}
+                            />
+                        </Grid>
+                      </MuiPickersUtilsProvider>
                 </Grid>
                 <Grid>
                     <Button variant="contained" color="primary" onClick={this.handleSubmit}>Submit</Button>

@@ -1,2 +1,2 @@
 export * from './PrivateRoute';
-export * from './Links';
+export {default as Notifier} from './Notifier';

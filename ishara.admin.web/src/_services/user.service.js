@@ -25,7 +25,7 @@ async function login(username, password) {
         body: JSON.stringify({ username, password })
     };
 
-    const response=await fetch(`${apiUrl}/users/authenticate`,requestOptions);
+    const response=await fetch(`${apiUrl}/admin/authenticate`,requestOptions);
     const user=await handleResponse(response, logout);
     // store user details and jwt token in local storage to keep user logged in between page refreshes
     localStorage.setItem('user',JSON.stringify(user));
@@ -37,50 +37,60 @@ export function logout() {
     localStorage.removeItem('user');
 }
 
-async function getAll() {
+/**
+ * @param {any} userId
+ */
+async function getAll(userId) {
     const requestOptions = {
         method: 'GET',
         headers: authHeader()
     };
 
-    const response = await fetch(`${apiUrl}/users`,requestOptions);
+    const response = await fetch(`${apiUrl}/admin/${userId}/users`,requestOptions);
     return handleResponse(response, logout);
 }
 
-/** @param {any} user */
-async function register(user) {
+/**
+ * @param {any} user
+ * @param {any} userId
+ */
+async function register(userId, user) {
     const requestOptions = {
         method: 'POST',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
     };
 
-    const response = await fetch(`${apiUrl}/users/register`,requestOptions);
+    const response = await fetch(`${apiUrl}/admin/${userId}/users`,requestOptions);
     return handleResponse(response, logout);
 }
 
-/** @param {any} user */
-async function update(user) {
+/**
+ * @param {any} user
+ * @param {any} userId
+ */
+async function update(userId, user) {
     const requestOptions = {
         method: 'PUT',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
     };
 
-    const response = await fetch(`${apiUrl}/users/${user.id}`,requestOptions);
+    const response = await fetch(`${apiUrl}/admin/${userId}/users/${user.id}`,requestOptions);
     return handleResponse(response, logout);
 }
 
 // prefixed function name with underscore because delete is a reserved word in javascript
-/** @param {string} id */
-async function _delete(id) {
+/**
+ * @param {string} id
+ * @param {any} userId
+ */
+async function _delete(userId, id) {
     const requestOptions = {
         method: 'DELETE',
         headers: authHeader()
     };
 
-    const response = await fetch(`${apiUrl}/users/${id}`,requestOptions);
+    const response = await fetch(`${apiUrl}/admin/${userId}/users/${id}`,requestOptions);
     return handleResponse(response, logout);
 }
-
-

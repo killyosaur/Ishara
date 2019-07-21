@@ -18,7 +18,6 @@ import {
 } from '@material-ui/core';
 import { DeleteForever } from '@material-ui/icons';
 import { userActions, postActions } from '../_actions';
-import {LoginLink} from '../_components';
 import { Form } from '../EditPage';
 import {RegisterPage} from '../RegisterPage';
 
@@ -42,11 +41,11 @@ const styles = ({ palette, spacing, mixins }) => createStyles({
     content: {
         flexGrow: 1,
         backgroundColor: palette.background.default,
-        padding: spacing.unit * 3,
+        padding: spacing(3),
         minWidth: 0, // So the Typography noWrap works
     },
     nested: {
-      paddingLeft: spacing.unit * 4,
+      paddingLeft: spacing(4),
       whiteSpace: 'nowrap',
       overflow: 'hidden',
       textOverflow: 'ellipsis'
@@ -56,13 +55,17 @@ const styles = ({ palette, spacing, mixins }) => createStyles({
 
 class HomePage extends Component {
     state = {
-        openUsers: true,
+        openUsers: false,
         openPosts: true
     };
 
     componentDidMount() {
         const { user } = this.props;
-        this.props.dispatch(userActions.getAll());
+
+        if (user.isAdmin) {
+            this.props.dispatch(userActions.getAll(user.id));
+            this.setState({openUsers: true });
+        }
 
         this.props.dispatch(postActions.getAll(user.id));
     }
@@ -79,7 +82,7 @@ class HomePage extends Component {
                 this.props.dispatch(postActions.delete(user.id, id));
                 break;
             case 'user':
-                this.props.dispatch(userActions.delete(id));
+                this.props.dispatch(userActions.delete(user.id, id));
                 break;
             default:
                 break;
@@ -94,6 +97,21 @@ class HomePage extends Component {
         this.setState(/** @param {any} state */state => ({[openId]: !state[openId]}));
     }
 
+    /**
+     * @param {{ isAdmin: any; }} user
+     */
+    renderAdmin(user) {
+        if(user.isAdmin) {
+            return (
+                <ListItem button data-open="openUsers" onClick={this.handleClick}>
+                    <ListItemText primary="Users" />
+                </ListItem>
+            );
+        } else {
+            return (<ListItem />);
+        }
+    }
+
     render() {
         const { user, users, posts, classes } = this.props;
 
@@ -101,20 +119,18 @@ class HomePage extends Component {
             <div className={classes.home}>
                 <Drawer variant="permanent" classes={{paper: classes.drawerPaper}} anchor="left">
                     <div className={classes.toolbar}>
-                        <Typography className={classes.drawerHeader} variant='title'>{user.username}</Typography>
+                        <Typography className={classes.drawerHeader} variant='h4'>{user.username}</Typography>
                     </div>
                     <Divider />
                     <List component="nav">
-                        <ListItem button data-open="openUsers" onClick={this.handleClick}>
-                            <ListItemText primary="Users" />
-                        </ListItem>
+                        { this.renderAdmin(user) }
                         <Collapse in={this.state.openUsers} timeout="auto" unmountOnExit>
                             <List component="ul" disablePadding>
-                                <ListItem button className={classes.nested} component={props => <Link to="/user" {...props} />}><em>Create New User</em></ListItem>
+                                <ListItem button className={classes.nested} component={Link} to="/user"><em>Create New User</em></ListItem>
                                 {users.loading && <Typography component="em">Loading users...</Typography>}
                                 {
                                     users.items && users.items.map(/** @param {any} u */u =>
-                                        <ListItem button className={classes.nested} key={u.id} component={props => <Link to={"/user/" + u.id} {...props} />}>
+                                        <ListItem button className={classes.nested} key={u.id} component={Link} to={"/user/" + u.id}>
                                             {u.username}
                                             <ListItemSecondaryAction>
                                                 <IconButton aria-label="Delete" name="user" id={u.id} onClick={this.handleDelete}>
@@ -131,11 +147,11 @@ class HomePage extends Component {
                         </ListItem>
                         <Collapse in={this.state.openPosts} timeout="auto" unmountOnExit>
                             <List component="ul" disablePadding>
-                                <ListItem button className={classes.nested} component={props => <Link to="/post" {...props} />}><em>Create New Post</em></ListItem>
+                                <ListItem button className={classes.nested} component={Link} to="/post"><em>Create New Post</em></ListItem>
                                 {posts.loading && <Typography component="em">Loading posts...</Typography>}
                                 {
                                     posts.items && posts.items.map(/** @param {any} p */p =>
-                                        <ListItem button className={classes.nested} key={p.id} component={props => <Link to={"/post/" + p.id} {...props} />}>
+                                        <ListItem button className={classes.nested} key={p.id} component={Link} to={"/post/" + p.id}>
                                             {p.title}
                                             <ListItemSecondaryAction>
                                                 <IconButton aria-label="Delete" name="post" id={p.id} onClick={this.handleDelete}>
@@ -147,7 +163,7 @@ class HomePage extends Component {
                                 }
                             </List>
                         </Collapse>
-                        <ListItem button component={LoginLink}>Log Out</ListItem>
+                        <ListItem button component={Link} to="/login">Log Out</ListItem>
                     </List>
                 </Drawer>
                 <Grid className={classes.content}>
