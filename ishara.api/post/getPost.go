@@ -10,9 +10,9 @@ import (
 )
 
 func getPost(dbDriver *data.DriverData, postID uuid.UUID) (*models.PostDto, error) {
-	var postDto *models.PostDto
+	var postDto models.PostDto
 
-	query := "FOR p IN post FOR u IN 1..1 OUTBOUND p._id written_by FILTER DATE_TIMESTAMP(p.publishedOn) >= DATE_NOW() AND p._key == @postID RETURN { \"title\": p.Title, \"content\": p.Content, \"id\": p._key, \"publishedOn\": p.PublishedOn, \"modifiedOn\": p.ModifiedOn, \"author\": { \"username\": u.username, \"firstName\": u.firstName, \"lastName\": u.lastName} }"
+	query := "FOR p IN post FOR u IN 1..1 OUTBOUND p._id written_by FILTER HAS(p, \"PublishedOn\") AND DATE_TIMESTAMP(p.PublishedOn) <= DATE_NOW() AND p._key == @postID RETURN { \"title\": p.Title, \"content\": p.Content, \"id\": p._key, \"publishedOn\": p.PublishedOn, \"modifiedOn\": p.ModifiedOn, \"author\": { \"username\": u.Username, \"firstName\": u.FirstName, \"lastName\": u.LastName} }"
 	bindVars := map[string]interface{}{
 		"postID": postID.String(),
 	}
@@ -22,7 +22,7 @@ func getPost(dbDriver *data.DriverData, postID uuid.UUID) (*models.PostDto, erro
 
 	defer cursor.Close()
 	for {
-		_, err := cursor.ReadDocument(ctx, postDto)
+		_, err := cursor.ReadDocument(ctx, &postDto)
 		if dbDriver.IsNoMoreDocuments(err) {
 			break
 		} else if err != nil {
@@ -30,5 +30,5 @@ func getPost(dbDriver *data.DriverData, postID uuid.UUID) (*models.PostDto, erro
 		}
 	}
 
-	return postDto, nil
+	return &postDto, nil
 }
