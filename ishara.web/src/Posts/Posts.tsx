@@ -40,23 +40,44 @@ function Posts() {
         pages: {
             next: 0,
             prev: 0,
+            current: 0
         }
     });
 
-    const [page, setPage] = useState(0);
+    const [page, setPage] = useState(1);
     
     useEffect(() => {
         async function fetchData() {
-            const {posts, nextPage, prevPage, total} = await new PostService().getAll();
-            setData({
-                posts, 
-                total,
-                pages: { next: nextPage, prev: prevPage }
-            });
+            const {current} = data.pages;
+
+            let next = data.pages.next;
+            let continueLoading = data.posts.length === 0 || data.posts.length < data.total;
+
+            if(current < page && continueLoading) {
+                const {posts, nextPage, prevPage, total} = await new PostService().getAll(page, pageCount);
+                setData({
+                    posts: data.posts.concat(posts), 
+                    total,
+                    pages: { next: nextPage, prev: prevPage, current: page }
+                });
+                next = nextPage;
+            }
+
+            const onScrollBottom = function() {
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+                    setPage(next);
+                }
+            };
+
+            window.addEventListener('scroll', onScrollBottom);
+
+            return function cleanup() {
+                window.removeEventListener('scroll', onScrollBottom);
+            }
         }
 
         fetchData();
-    }, [page, pageCount])
+    }, [data, page, pageCount])
 
     return (<Grid item xs={12}>
         {
@@ -70,7 +91,7 @@ function Posts() {
                     {p.content}
                 </Typography>
                 <Divider />
-                <Grid item xs={12} direction="row" alignItems="flex-start">
+                <Grid item xs={12}>
                     <Typography variant="subtitle1" className={classes.horizontalDivider}>
                         {p.author.username}
                     </Typography>

@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"strconv"
 
 	"../data"
 	"../models"
@@ -14,11 +15,13 @@ func getAllPosts(dbDriver *data.DriverData, limit int64, page int64) (*models.Po
 	query := "FOR p IN post FOR u IN 1..1 OUTBOUND p._id written_by FILTER HAS(p, \"PublishedOn\") AND DATE_TIMESTAMP(p.PublishedOn) <= DATE_NOW() SORT p.PublishedOn DESC "
 
 	if limit > 0 {
-		skipAndLimit := string(limit)
+		skipAndLimit := strconv.FormatInt(limit, 10)
 		if page > 1 {
-			skipAndLimit = string(page*limit) + "," + skipAndLimit
+			skipAndLimit = strconv.FormatInt((page-1)*limit, 10) + "," + strconv.FormatInt(page*limit, 10)
 		}
 		query = query + "LIMIT " + skipAndLimit + " "
+	} else if page <= 0 {
+		page = 1
 	}
 
 	query = query + "RETURN { \"title\": p.Title, \"content\": p.Content, \"id\": p._key, \"publishedOn\": p.PublishedOn, \"modifiedOn\": p.ModifiedOn, \"author\": { \"username\": u.Username, \"firstName\": u.FirstName, \"lastName\": u.LastName} }"

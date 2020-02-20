@@ -7,7 +7,7 @@ export default class PostService {
             method: 'GET'
         };
 
-        const response = await fetch(`${settings.api}/posts?limit=${limit}&page=${page}`, requestOptions);
+        const response = await fetch(`${settings.api}/posts?limit=${limit}&offset=${page}`, requestOptions);
 
         const text = await response.text();
         const data = text && JSON.parse(text);
