@@ -6,3 +6,5 @@ ishara.api/debug
 **/.terraform
 *.tfstate
 *.tfstate.*
+*.pem
+*.jwtSecret
