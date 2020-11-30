@@ -11,13 +11,14 @@ export const userService = {
     delete: _delete
 };
 
+// @ts-ignore
+const apiUrl = process.env.REACT_APP_ADMIN_API || '';
+
 /**
  * @param {string} username
  * @param {string} password
  */
 async function login(username, password) {
-    const apiUrl = process.env.REACT_APP_ADMIN_API;
-
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

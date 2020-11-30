@@ -1,7 +1,7 @@
 import {parseISO} from 'date-fns';
 
 export default class PostService {
-    public async getAll(page: number = 0, limit: number = 0): Promise<PostCollection> {
+    public async getAll(page: Number = 0, limit: Number = 0): Promise<PostCollection> {
         const requestOptions = {
             method: 'GET'
         };

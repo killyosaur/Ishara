@@ -31,8 +31,8 @@ const useStyles = makeStyles({
 
 function Posts() {
     const classes = useStyles();
-    const pageCount = process.env.REACT_APP_PAGE_COUNT;
-    const dateFormat = process.env.REACT_APP_DATE_FORMAT;
+    const pageCount = new Number(process.env.REACT_APP_PAGE_COUNT) || 0;
+    const dateFormat = process.env.REACT_APP_DATE_FORMAT || "";
 
     const [data, setData] = useState({
         posts: emptyPosts,
