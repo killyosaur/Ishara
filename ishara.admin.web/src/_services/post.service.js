@@ -1,6 +1,5 @@
 import { authHeader } from '../_helpers';
 import { handleResponse } from './handleResponse';
-import settings from '../settings.js';
 
 export const postService = {
     getAll,
@@ -11,12 +10,14 @@ export const postService = {
 
 /** @param {string} userId */
 async function getAll(userId) {
+    const api = process.env.REACT_APP_ADMIN_API;
+
     const requestOptions = {
         method: 'GET',
         headers: authHeader()
     };
 
-    const response = await fetch(`${settings.api}/admin/${userId}/posts`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts`,requestOptions);
     return handleResponse(response);
 }
 
@@ -28,7 +29,7 @@ async function create(userId, post) {
         body: JSON.stringify(post)
     };
 
-    const response = await fetch(`${settings.api}/admin/${userId}/posts`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts`,requestOptions);
     return handleResponse(response);
 }
 
@@ -40,7 +41,7 @@ async function update(userId, post) {
         body: JSON.stringify(post)
     };
 
-    const response = await fetch(`${settings.api}/admin/${userId}/posts/${post.id}`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts/${post.id}`,requestOptions);
     return handleResponse(response);
 }
 
@@ -52,6 +53,6 @@ async function _delete(userId, id) {
         headers: authHeader()
     };
 
-    const response = await fetch(`${settings.api}/admin/${userId}/posts/${id}`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts/${id}`,requestOptions);
     return handleResponse(response);
 }

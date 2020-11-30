@@ -1,9 +1,6 @@
 // @ts-check
 import { authHeader } from '../_helpers';
 import { handleResponse } from './handleResponse';
-import settings from '../settings.js';
-
-const apiUrl = settings.api;
 
 export const userService = {
     login,
@@ -19,6 +16,8 @@ export const userService = {
  * @param {string} password
  */
 async function login(username, password) {
+    const apiUrl = process.env.REACT_APP_ADMIN_API;
+
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

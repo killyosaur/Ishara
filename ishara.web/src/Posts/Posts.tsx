@@ -2,7 +2,6 @@ import  React, {useState, useEffect} from 'react';
 import { Grid, Paper, Typography, makeStyles, Divider } from '@material-ui/core';
 import {format} from 'date-fns';
 import { Post, PostService } from '../_services';
-import settings from "../settings";
 
 const emptyPosts: Post[] = [];
 
@@ -32,7 +31,8 @@ const useStyles = makeStyles({
 
 function Posts() {
     const classes = useStyles();
-    const {pageCount} = settings;
+    const pageCount = process.env.REACT_APP_PAGE_COUNT;
+    const dateFormat = process.env.REACT_APP_DATE_FORMAT;
 
     const [data, setData] = useState({
         posts: emptyPosts,
@@ -96,7 +96,7 @@ function Posts() {
                         {p.author.username}
                     </Typography>
                     <Typography variant="subtitle1">
-                        {format(p.publishedOn, settings.dateFormat)}
+                        {format(p.publishedOn, dateFormat)}
                     </Typography>
                 </Grid>
             </Paper>)

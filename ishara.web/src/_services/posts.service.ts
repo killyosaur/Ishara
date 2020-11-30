@@ -1,4 +1,3 @@
-import settings from "../settings";
 import {parseISO} from 'date-fns';
 
 export default class PostService {
@@ -7,7 +6,9 @@ export default class PostService {
             method: 'GET'
         };
 
-        const response = await fetch(`${settings.api}/posts?limit=${limit}&offset=${page}`, requestOptions);
+        const api = process.env.REACT_APP_API;
+
+        const response = await fetch(`${api}/posts?limit=${limit}&offset=${page}`, requestOptions);
 
         const text = await response.text();
         const data = text && JSON.parse(text);

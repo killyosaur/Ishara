@@ -1,0 +1,5 @@
+#! /bin/bash
+arangosh --server.endpoint http+ssl://0.0.0.0:8529 --javascript.execute-string 'require("@arangodb/users").save("$ROOT_USER", "$ROOT_PASSWORD");'
+arangosh --server.endpoint http+ssl://0.0.0.0:8529 --server.password $ROOT_PASSWORD --javascript.execute-string 'require("@arangodb/users").save("$APP_USER", "$APP_PASSWORD");'
+arangosh --server.endpoint http+ssl://0.0.0.0:8529 --server.password $ROOT_PASSWORD --javascript.execute-string 'let graph_module = require("@arangodb/general-graph");let edgeDefinitions = [{ collection: "accessed_by", "from": [ "user" ], "to" : [ "access" ] },{ collection: "secured_by", "from": [ "user" ], "to" : [ "password" ] },{ collection: "written_by", "from": [ "user" ], "to" : [ "comment", "post" ] },{ collection: "tagged_as", "from": [ "post" ], "to" : [ "tag" ] }];graph_module._create("Ishara", edgeDefinitions);'
+arangosh --server.endpoint http+ssl://0.0.0.0:8529 --server.password $ROOT_PASSWORD --javascript.execute-string 'require("@arangodb/users").grantDatabase("$APP_USER", "Ishara", "rw");'
