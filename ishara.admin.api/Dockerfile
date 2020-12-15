@@ -1,3 +1,4 @@
 FROM scratch
-ADD admin.api.exe /
-CMD ["/admin.api.exe"]
+ADD ishara.admin.api.exe /
+EXPOSE 5000
+CMD ["/ishara.admin.api.exe"]

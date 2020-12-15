@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -15,24 +17,30 @@ import (
 )
 
 const (
-	dbName    = "IsharaDB"
+	dbName    = "Ishara"
 	graphName = "Ishara"
-	dbHost    = "localhost"
-	dbPort    = 8529
 )
 
 func main() {
 	var err error
+	port, _ := strconv.ParseInt(os.Getenv("DB_PORT"), 10, 64)
+
 	dbDriver, err := data.Connect(data.ConnectionOptions{
 		DatabaseName: dbName,
 		GraphName:    graphName,
-		Host:         dbHost,
-		Port:         dbPort,
+		Host:         os.Getenv("DB_HOST"),
+		Port:         port,
 		Username:     os.Getenv("DB_USER"),
 		Password:     os.Getenv("DB_PWRD"),
 	})
+
 	if err != nil {
 		panic(err)
+	}
+
+	password := users.CreateRootUser(dbDriver)
+	if password != "" {
+		fmt.Println("root: " + password)
 	}
 
 	r := chi.NewRouter()
@@ -45,12 +53,12 @@ func main() {
 		rt.Mount("/admin", routers(dbDriver))
 	})
 
-	http.ListenAndServe("localhost:5000", r)
+	http.ListenAndServe(":5000", r)
 }
 
 func getCors() func(next http.Handler) http.Handler {
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3001"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,

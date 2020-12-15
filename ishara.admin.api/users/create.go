@@ -50,6 +50,29 @@ func Create(dbDriver *data.Driver) http.HandlerFunc {
 	}
 }
 
+// CreateRootUser ...
+func CreateRootUser(dbDriver *data.Driver) (string) {
+	ctx := context.Background()
+
+	if userNameExists(ctx, dbDriver, "root") {
+		return ""
+	}
+
+	password := GeneratePassword()
+
+	newUser := CreateUserDto{
+		Username:  "root",
+		Biography: "The First User",
+		FirstName: "Root",
+		LastName:  "User",
+		Password:  password,
+	}
+
+	createUser(dbDriver, newUser);
+
+	return password
+}
+
 func createUser(dbDriver *data.Driver, userDto CreateUserDto) (uuid.UUID, error) {
 	ctx := context.Background()
 

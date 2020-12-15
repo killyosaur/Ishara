@@ -10,7 +10,7 @@ provider "kubernetes" {
 
 resource "local_file" "kubeconfig" {
     content  = digitalocean_kubernetes_cluster.k8s_cluster.kube_config[0].raw_config
-    filename = "kubeconfig.yaml"
+    filename = "k8s/kubeconfig.yaml"
 }
 
 resource "kubernetes_namespace" "anarchy_for_sale" {

@@ -1,3 +1,4 @@
 FROM scratch
-ADD api.exe /
-CMD ["/api.exe"]
+ADD ishara.api.exe /
+EXPOSE 5001
+CMD ["/ishara.api.exe"]

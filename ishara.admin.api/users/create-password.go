@@ -3,11 +3,22 @@ package users
 import (
 	"context"
 	"time"
+	"math/rand"
+	"strings"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"../data"
+)
+
+var (
+	minCharSets = []string {
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		"!@#$%&*.+=><",
+		"0123456789",
+	}
+    allCharSet = "abcdefghijklmnopqrstuvwxyz" + strings.Join(minCharSets, "")
 )
 
 // CreatePassword creates password and returns the new id
@@ -58,4 +69,34 @@ func hashAndSalt(password []byte) ([]byte, error) {
 	}
 
 	return hash, nil
+}
+
+// GeneratePassword creates a random password
+func GeneratePassword() string {
+	rand.Seed(time.Now().Unix())
+	var password strings.Builder
+	var charSets = len(minCharSets)
+
+	for i := 0; i < charSets; i++ {
+		for j := 0; j < 3; j++ {
+			password.WriteString(character(minCharSets[i]))
+		}
+	}
+
+	remainingLength := 42 - (charSets * 3)
+	for i := 0; i < remainingLength; i++ {
+		password.WriteString(character(allCharSet))
+	}
+
+	inRune := []rune(password.String())
+	rand.Shuffle(len(inRune), func(i, j int){
+		inRune[i], inRune[j] = inRune[j], inRune[i]
+	})
+
+	return string(inRune)
+}
+
+func character(charset string) string {
+	random := rand.Intn(len(charset))
+	return string(charset[random])
 }

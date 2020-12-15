@@ -8,3 +8,4 @@ ishara.api/debug
 *.tfstate.*
 *.pem
 *.jwtSecret
+**kubeconfig.yaml

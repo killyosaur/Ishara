@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -14,18 +15,18 @@ import (
 )
 
 const (
-	dbName    = "IsharaDB"
+	dbName    = "Ishara"
 	graphName = "Ishara"
-	dbHost    = "localhost"
-	dbPort    = 8529
 )
 
 func main() {
 	var err error
+	dbPort, _ := strconv.ParseInt(os.Getenv("DB_PORT"), 10, 64)
+
 	dbDriver, err := data.Connect(data.DriverConfig{
 		DatabaseName: dbName,
 		GraphName:    graphName,
-		Host:         dbHost,
+		Host:         os.Getenv("DB_HOST"),
 		Port:         dbPort,
 		Username:     os.Getenv("DB_USER"),
 		Password:     os.Getenv("DB_PWRD"),
@@ -44,7 +45,7 @@ func main() {
 		rt.Mount("/posts", routers(dbDriver))
 	})
 
-	http.ListenAndServe("localhost:5001", r)
+	http.ListenAndServe(":5001", r)
 }
 
 func getCors() func(next http.Handler) http.Handler {
