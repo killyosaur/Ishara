@@ -11,9 +11,9 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth"
 
-	"./data"
-	"./posts"
-	"./users"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
+	"github.com/killyosaur/ishara/ishara.admin.api/posts"
+	"github.com/killyosaur/ishara/ishara.admin.api/users"
 )
 
 const (

@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 
-	"./data"
-	"./post"
-	"./posts"
+	"github.com/killyosaur/ishara/ishara.api/data"
+	"github.com/killyosaur/ishara/ishara.api/post"
+	"github.com/killyosaur/ishara/ishara.api/posts"
 )
 
 const (

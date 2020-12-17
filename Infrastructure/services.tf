@@ -18,7 +18,7 @@ resource "kubernetes_secret" "ishara_secret" {
   type = "Opaque"
 }
 
-resources "kubernetes_deployment" "admin_api" {
+resource "kubernetes_deployment" "admin_api" {
   metadata {
     name = "anarchyforsale-admin"
 
@@ -68,7 +68,7 @@ resources "kubernetes_deployment" "admin_api" {
             value_from {
               secret_key_ref {
                 key  = "username"
-                name = kubernetes_secret.ishara_secret.name
+                name = kubernetes_secret.ishara_secret.metadata[0].name
               }
             } 
           }
@@ -79,7 +79,7 @@ resources "kubernetes_deployment" "admin_api" {
             value_from {
               secret_key_ref {
                 key  = "password"
-                name = kubernetes_secret.ishara_secret.name
+                name = kubernetes_secret.ishara_secret.metadata[0].name
               }
             } 
           }

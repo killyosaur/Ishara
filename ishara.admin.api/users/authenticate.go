@@ -12,8 +12,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"../controllers"
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/controllers"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 // AuthenticateUserDto For retrieving data from the client

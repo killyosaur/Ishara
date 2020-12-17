@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"../data"
-	"../infrastructure"
+	"github.com/killyosaur/ishara/ishara.api/data"
+	"github.com/killyosaur/ishara/ishara.api/infrastructure"
 )
 
 // Get ...

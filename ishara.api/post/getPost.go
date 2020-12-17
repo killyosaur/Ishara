@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"../data"
-	"../models"
+	"github.com/killyosaur/ishara/ishara.api/data"
+	"github.com/killyosaur/ishara/ishara.api/models"
 )
 
 func getPost(dbDriver *data.DriverData, postID uuid.UUID) (*models.PostDto, error) {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"../controllers"
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/controllers"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 // GetUserDto ...

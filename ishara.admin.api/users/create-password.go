@@ -2,23 +2,23 @@ package users
 
 import (
 	"context"
-	"time"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 var (
-	minCharSets = []string {
+	minCharSets = []string{
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		"!@#$%&*.+=><",
 		"0123456789",
 	}
-    allCharSet = "abcdefghijklmnopqrstuvwxyz" + strings.Join(minCharSets, "")
+	allCharSet = "abcdefghijklmnopqrstuvwxyz" + strings.Join(minCharSets, "")
 )
 
 // CreatePassword creates password and returns the new id
@@ -89,7 +89,7 @@ func GeneratePassword() string {
 	}
 
 	inRune := []rune(password.String())
-	rand.Shuffle(len(inRune), func(i, j int){
+	rand.Shuffle(len(inRune), func(i, j int) {
 		inRune[i], inRune[j] = inRune[j], inRune[i]
 	})
 

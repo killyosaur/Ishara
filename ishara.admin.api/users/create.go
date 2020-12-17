@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"../controllers"
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/controllers"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 // CreateUserDto ...
@@ -51,7 +51,7 @@ func Create(dbDriver *data.Driver) http.HandlerFunc {
 }
 
 // CreateRootUser ...
-func CreateRootUser(dbDriver *data.Driver) (string) {
+func CreateRootUser(dbDriver *data.Driver) string {
 	ctx := context.Background()
 
 	if userNameExists(ctx, dbDriver, "root") {
@@ -68,7 +68,7 @@ func CreateRootUser(dbDriver *data.Driver) (string) {
 		Password:  password,
 	}
 
-	createUser(dbDriver, newUser);
+	createUser(dbDriver, newUser)
 
 	return password
 }
