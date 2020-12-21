@@ -15,8 +15,6 @@ github.com/google/addlicense v0.0.0-20200817051935-6f4cd4aacc89/go.mod h1:EMjYTR
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2 h1:EVhdT+1Kseyi1/pUmXKaFxYsDNy9RQYkMWRH68J/W7Y=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/killyosaur/ishara v0.0.0-20200220012507-436fdce95da3 h1:/MoWAx0pq3eCuRwZBE6yM0/d6gpNkrS8lzE/X+FUnJs=
-github.com/killyosaur/ishara v0.0.0-20200220012507-436fdce95da3/go.mod h1:SUfMdZSZGhsKtqbG4sKTj7jYy9QFQ04S/T5gdyEQYZE=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

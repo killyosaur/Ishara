@@ -49,7 +49,7 @@ resource "kubernetes_deployment" "admin_api" {
       spec {
         container {
           name  = "admin"
-          image = "killyosaur/ishara.admin.api:latest"
+          image = "killyosaur/ishara.admin.api:0.0.3"
           args  = []
 
           env {
