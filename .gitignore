@@ -4,6 +4,7 @@ build/
 ishara.api/debug
 
 **/.terraform
+**/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 *.pem
