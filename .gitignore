@@ -1,7 +1,7 @@
 node_modules/
 **/*.exe
 build/
-ishara.api/debug
+**/debug
 
 **/.terraform
 **/.terraform.lock.hcl

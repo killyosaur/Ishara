@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	dbName    = "Ishara"
+	dbName    = "IsharaDB"
 	graphName = "Ishara"
 )
 
