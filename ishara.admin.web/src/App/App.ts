@@ -19,9 +19,6 @@ const styles = createStyles({
   }
 });
 
-/**
- * @param {{ classes: any; dispatch: any; }} props
- */
 const App = (props) => {
   const { classes, dispatch } = props;
   history.listen(() => {
