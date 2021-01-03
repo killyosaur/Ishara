@@ -1,4 +1,3 @@
-// @ts-check
 export const postConstants = {
     CREATE_REQUEST: 'POSTS_CREATE_REQUEST',
     CREATE_SUCCESS: 'POSTS_CREATE_SUCCESS',

@@ -22,7 +22,7 @@ WORKDIR /dist
 RUN cp /build/admin .
 
 # Build a small image
-FROM scratch
+FROM alpine
 
 COPY --from=builder /dist/admin /
 

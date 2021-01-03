@@ -1,8 +1,9 @@
-// @ts-check
 import { userConstants } from '../_constants';
 import { userService } from '../_services';
 import { alertActions } from './';
 import { history } from '../_helpers';
+import {User} from '../_models';
+import { UserDeleteFailActionType, UserDeleteRequestActionType, UserDeleteSuccessActionType, UserGetAllFailActionType, UserGetAllRequestActionType, UserGetAllSuccessActionType, UserLoginFailActionType, UserLoginRequestActionType, UserLoginSuccessActionType, UserRegisterFailActionType, UserRegisterRequestActionType, UserRegisterSuccessActionType } from './user.action.types';
 
 export const userActions = {
     login,
@@ -12,35 +13,26 @@ export const userActions = {
     delete: _delete
 };
 
-/**
- * @param {string} username
- * @param {string} password
- */
-function login(username, password) {
-    return /** @param {Function} dispatch */ dispatch => {
+function login(username: string, password: string) {
+    return (dispatch: Function) => {
         dispatch(request({ username }));
 
         userService.login(username, password)
             .then(
-                /** @param {any} user */
                 user => {
                     dispatch(success(user));
                     history.push('/');
                 },
-                /** @param {Error} error */
-                error => {
-                    dispatch(failure(error.toString()));
-                    dispatch(alertActions.error(error.toString()));
+                (error: Error) => {
+                    dispatch(failure(error));
+                    dispatch(alertActions.error(error.message));
                 }
             );
     };
 
-    /** @param {any} user */
-    function request(user) { return { type: userConstants.LOGIN_REQUEST, user } }
-    /** @param {any} user */
-    function success(user) { return { type: userConstants.LOGIN_SUCCESS, user } }
-    /** @param {string} error */
-    function failure(error) { return { type: userConstants.LOGIN_FAILURE, error } }
+    function request(user: User): UserLoginRequestActionType { return { type: userConstants.LOGIN_REQUEST, payload: {user} } }
+    function success(user: User): UserLoginSuccessActionType { return { type: userConstants.LOGIN_SUCCESS, payload: {user} } }
+    function failure(error: Error): UserLoginFailActionType { return { type: userConstants.LOGIN_FAILURE, payload: {error} } }
 }
 
 function logout() {
@@ -48,23 +40,17 @@ function logout() {
     return { type: userConstants.LOGOUT };
 }
 
-/**
- * @param {any} user
- * @param {string} userId
- */
-function register(userId, user) {
-    return /** @param {Function} dispatch */ dispatch => {
+function register(userId: string, user: User) {
+    return (dispatch: Function) => {
         dispatch(request(user));
 
         userService.register(userId, user)
             .then(
-                /** @param {any} user */
                 user => {
                     dispatch(success(user));
                     history.push('/user');
                     dispatch(alertActions.success('Registration successful'));
                 },
-                /** @param {Error} error */
                 error => {
                     dispatch(failure(error.toString()));
                     dispatch(alertActions.error(error.toString()));
@@ -72,62 +58,40 @@ function register(userId, user) {
             );
         };
 
-        /** @param {any} user */
-        function request(user) { return { type: userConstants.REGISTER_REQUEST, user } }
-        /** @param {any} user */
-        function success(user) { return { type: userConstants.REGISTER_SUCCESS, user } }
-        /** @param {string} error */
-        function failure(error) { return { type: userConstants.REGISTER_FAILURE, error } }
+        function request(user: User): UserRegisterRequestActionType { return { type: userConstants.REGISTER_REQUEST, payload: {user} } }
+        function success(user: User): UserRegisterSuccessActionType { return { type: userConstants.REGISTER_SUCCESS, payload: {user} } }
+        function failure(error: Error): UserRegisterFailActionType { return { type: userConstants.REGISTER_FAILURE, payload: {error} } }
     }
 
-    /**
-     * @param {string} userId
-     */
-    function getAll(userId) {
-        return /** @param {Function} dispatch */ dispatch => {
+    function getAll(userId: string) {
+        return (dispatch: Function) => {
             dispatch(request());
 
             userService.getAll(userId)
                 .then(
-                    /** @param {any[]} users */
                     users => dispatch(success(users)),
-                    /** @param {Error} error */
                     error => dispatch(failure(error.toString()))
                 );
         };
 
-        function request() { return { type: userConstants.GETALL_REQUEST } }
-        /** @param {any[]} users */
-        function success(users) { return { type: userConstants.GETALL_SUCCESS, users } }
-        /** @param {string} error */
-        function failure(error) { return { type: userConstants.GETALL_FAILURE, error } }
+        function request(): UserGetAllRequestActionType { return { type: userConstants.GETALL_REQUEST } }
+        function success(users: User[]): UserGetAllSuccessActionType { return { type: userConstants.GETALL_SUCCESS, payload: {users} } }
+        function failure(error: Error): UserGetAllFailActionType { return { type: userConstants.GETALL_FAILURE, payload: {error} } }
     }
 
     // prefixed function name with underscore because delete is a reserved word in javascript
-    /**
-     * @param {string} id
-     * @param {string} userId
-     */
-    function _delete(userId, id) {
-        return /** @param {Function} dispatch */ dispatch => {
+    function _delete(userId: string, id: string) {
+        return (dispatch: Function) => {
             dispatch(request(id));
 
             userService.delete(userId, id)
                 .then(
-                    /** @param {any} user */
-                    user => dispatch(success(id)),
-                    /** @param {Error} error */
+                    () => dispatch(success(id)),
                     error => dispatch(failure(id, error.toString()))
                 );
         };
 
-        /** @param {string} id */
-        function request(id) { return { type: userConstants.DELETE_REQUEST, id } }
-        /** @param {string} id */
-        function success(id) { return { type: userConstants.DELETE_SUCCESS, id } }
-        /**
-         * @param {string} id 
-         * @param {string} error
-         */
-        function failure(id, error) { return { type: userConstants.DELETE_FAILURE, id, error } }
+        function request(id: string): UserDeleteRequestActionType { return { type: userConstants.DELETE_REQUEST, payload: {id} } }
+        function success(id: string): UserDeleteSuccessActionType { return { type: userConstants.DELETE_SUCCESS, payload: {id} } }
+        function failure(id: string, error: Error): UserDeleteFailActionType { return { type: userConstants.DELETE_FAILURE, payload: {id, error} } }
     }

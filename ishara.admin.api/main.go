@@ -38,10 +38,8 @@ func main() {
 		panic(err)
 	}
 
-	password := users.CreateRootUser(dbDriver)
-	if password != "" {
-		fmt.Println("root: " + password)
-	}
+	pass := users.CreateRootUser(dbDriver)
+	fmt.Print("admin password: " + pass)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
@@ -70,7 +68,8 @@ func getCors() func(next http.Handler) http.Handler {
 
 func routers(dbDriver *data.Driver) http.Handler {
 	router := chi.NewRouter()
-	auth := jwtauth.New("HS512", []byte(os.Getenv("ISHARA_SECRET")), nil)
+	secret := os.Getenv("ISHARA_SECRET")
+	auth := jwtauth.New("HS512", []byte(secret), nil)
 
 	router.Group(func(r chi.Router) {
 		r.Post("/authenticate", users.Authenticate(auth, dbDriver))

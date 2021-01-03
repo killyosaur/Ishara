@@ -1,4 +1,5 @@
 import { authHeader } from '../_helpers';
+import { Post } from '../_models';
 import { handleResponse } from './handleResponse';
 
 export const postService = {
@@ -7,22 +8,19 @@ export const postService = {
     update,
     delete: _delete
 }
+const api = process.env.REACT_APP_ADMIN_API;
 
-/** @param {string} userId */
-async function getAll(userId) {
-    const api = process.env.REACT_APP_ADMIN_API;
-
+async function getAll(userId: string) {
     const requestOptions = {
         method: 'GET',
         headers: authHeader()
     };
 
     const response = await fetch(`${api}/admin/${userId}/posts`,requestOptions);
-    return handleResponse(response);
+    return handleResponse<Post[]>(response);
 }
 
-/** @param {string} userId, @param {any} post */
-async function create(userId, post) {
+async function create(userId: string, post: Post) {
     const requestOptions = {
         method: 'POST',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
@@ -30,11 +28,10 @@ async function create(userId, post) {
     };
 
     const response = await fetch(`${api}/admin/${userId}/posts`,requestOptions);
-    return handleResponse(response);
+    return handleResponse<string>(response);
 }
 
-/** @param {string} userId, @param {any} post */
-async function update(userId, post) {
+async function update(userId: string, post: Post) {
     const requestOptions = {
         method: 'PUT',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
@@ -42,12 +39,11 @@ async function update(userId, post) {
     };
 
     const response = await fetch(`${api}/admin/${userId}/posts/${post.id}`,requestOptions);
-    return handleResponse(response);
+    return handleResponse<string>(response);
 }
 
 // prefixed function name with underscore because delete is a reserved word in javascript
-/** @param {string} userId, @param {string} id */
-async function _delete(userId, id) {
+async function _delete(userId: string, id: string) {
     const requestOptions = {
         method: 'DELETE',
         headers: authHeader()

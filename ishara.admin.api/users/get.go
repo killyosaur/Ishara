@@ -17,6 +17,7 @@ type GetUserDto struct {
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	Biography string    `json:"bio,omitempty"`
+	Access    []string  `json:"access"`
 }
 
 // Get ...
@@ -33,7 +34,7 @@ func Get(dbDriver *data.Driver) http.HandlerFunc {
 }
 
 func getAllUsers(dbDriver *data.Driver) (interface{}, error) {
-	query := "FOR u IN user FILTER !u.InActive RETURN { \"id\": u._key, \"firstName\": u.FirstName, \"lastName\": u.LastName, \"username\": u.Username, \"bio\": u.Biography }"
+	query := "FOR u IN user FILTER !u.InActive RETURN MERGE({ \"id\": u._key, \"firstName\": u.FirstName, \"lastName\": u.LastName, \"username\": u.Username, \"bio\": u.Biography }, {access: (FOR a IN 1..1 OUTBOUND u._id accessed_as RETURN a.Type)})"
 	var allUsers []GetUserDto
 	ctx := context.Background()
 

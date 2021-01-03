@@ -1,29 +1,24 @@
-// @ts-check
+import { AlertActionTypes, BaseAlertAction } from '../_actions';
 import { alertConstants } from '../_constants';
+import {AlertState} from '../_models/state';
 
-/** @param {{ type: string; message: string; options: any, key: string }} action */
-export function alert(state = [], action) {
+const initialState: AlertState = { message: '', variant: undefined, key: 0 };
+export function alert(state = initialState, action: AlertActionTypes) {
     switch(action.type) {
         case alertConstants.SUCCESS:
         case alertConstants.ERROR:
         case alertConstants.INFORMATION:
         case alertConstants.WARNING:
-            return [
-                ...state,
-                {
-                    key: action.options.key,
-                    message: action.message,
+            var baseAction = action as BaseAlertAction;
+            return {
+                    key: action.key,
+                    message: baseAction.message,
                     options: {
-                        ...action.options
+                        ...baseAction.options
                     }
-                }
-            ];
+                };
         case alertConstants.CLEAR:
-            return state.map(n => n.key === action.key ? {...n, dismissed: true} : { ...n });
-        case alertConstants.CLEARALL:
-            return state.map(n => { return {...n, dismissed: true}; });
-        case alertConstants.REMOVE:
-            return state.filter(notification => notification.key !== action.key)
+            return state.key === action.key ? {} : state;
         default:
             return state;
     }

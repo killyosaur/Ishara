@@ -21,6 +21,8 @@ type CreateUserDto struct {
 	LastName  string    `json:"lastName"`
 	Password  string    `json:"password"`
 	Biography string    `json:"bio"`
+	IsAdmin   bool      `json:"isAdmin"`
+	IsAuthor  bool      `json:"isAuthor"`
 }
 
 // CreateUser for getting the user data from the database
@@ -58,6 +60,8 @@ func CreateRootUser(dbDriver *data.Driver) string {
 		return ""
 	}
 
+	setAccessTypes(ctx, dbDriver)
+
 	password := GeneratePassword()
 
 	newUser := CreateUserDto{
@@ -66,6 +70,8 @@ func CreateRootUser(dbDriver *data.Driver) string {
 		FirstName: "Root",
 		LastName:  "User",
 		Password:  password,
+		IsAdmin:   true,
+		IsAuthor:  false,
 	}
 
 	createUser(dbDriver, newUser)
@@ -106,6 +112,20 @@ func createUser(dbDriver *data.Driver, userDto CreateUserDto) (uuid.UUID, error)
 	_, err = userCol.CreateDocument(ctx, newUser)
 	if err != nil {
 		return uuid.UUID{}, err
+	}
+
+	if userDto.IsAdmin {
+		err = setAccess(ctx, dbDriver, newUser.Key, "Administrator")
+		if err != nil {
+			return uuid.UUID{}, err
+		}
+	}
+
+	if userDto.IsAuthor {
+		err = setAccess(ctx, dbDriver, newUser.Key, "Author")
+		if err != nil {
+			return uuid.UUID{}, err
+		}
 	}
 
 	_, err = CreatePassword(ctx, dbDriver, newUser.Key, userDto.Password)

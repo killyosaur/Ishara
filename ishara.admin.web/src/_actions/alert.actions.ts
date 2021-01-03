@@ -1,66 +1,30 @@
-// @ts-check
-import React from 'react';
 import { alertConstants } from '../_constants';
-import {Button} from '@material-ui/core';
-import {Close} from '@material-ui/icons';
+import {ClearAlertAction, ErrorAlertAction, InfoAlertAction, SuccessAlertAction, WarnAlertAction} from './alert.action.types'
 
 export const alertActions = {
     success,
     error,
     information,
     warning,
-    clear,
-    clearAll,
-    remove
+    clear
 };
 
-/**  @param {string} message */
-function success(message) {
-    return { type: alertConstants.SUCCESS, message, options: getOptions('success') };
+function success(message: string): SuccessAlertAction {
+    return { key: new Date().getTime() + Math.random(), type: alertConstants.SUCCESS, message, options: {variant: 'success'} };
 }
 
-/** @param {string} message */
-function error(message) {
-    return { type: alertConstants.ERROR, message, options: getOptions('error') };
+function error(message: string): ErrorAlertAction {
+    return { key: new Date().getTime() + Math.random(), type: alertConstants.ERROR, message, options: {variant: 'error'} };
 }
 
-/** @param {string} message */
-function warning(message) {
-    return { type: alertConstants.WARNING, message, options: getOptions('warn') };
+function warning(message: string): WarnAlertAction {
+    return { key: new Date().getTime() + Math.random(), type: alertConstants.WARNING, message, options: {variant: 'warning'} };
 }
 
-/** @param {string} message */
-function information(message) {
-    return { type: alertConstants.INFORMATION, message, options: getOptions('info') };
+function information(message: string): InfoAlertAction {
+    return { key: new Date().getTime() + Math.random(), type: alertConstants.INFORMATION, message, options: {variant: 'info'} };
 }
 
-/**
- * @param {any} key
- */
-function clear(key) {
+function clear(key: number): ClearAlertAction {
     return { type: alertConstants.CLEAR, key };
-}
-
-function clearAll() {
-    return { type: alertConstants.CLEARALL };
-}
-
-/**
- * @param {any} key
- */
-function remove(key) {
-    return {type: alertConstants.REMOVE, key };
-}
-
-/**
- * @param {string} variant
- */
-function getOptions(variant) {
-    return {
-        variant,
-        action: /** @param {any} key */key => (
-            <Button onClick={() => clear(key)}><Close /></Button>
-        ),
-        key: new Date().getTime() + Math.random()
-    };
 }

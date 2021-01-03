@@ -1,5 +1,5 @@
-// @ts-check
 import { authHeader } from '../_helpers';
+import { User } from '../_models';
 import { handleResponse } from './handleResponse';
 
 export const userService = {
@@ -11,14 +11,9 @@ export const userService = {
     delete: _delete
 };
 
-// @ts-ignore
 const apiUrl = process.env.REACT_APP_ADMIN_API || '';
 
-/**
- * @param {string} username
- * @param {string} password
- */
-async function login(username, password) {
+async function login(username: string, password: string): Promise<User> {
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,9 +21,9 @@ async function login(username, password) {
     };
 
     const response=await fetch(`${apiUrl}/admin/authenticate`,requestOptions);
-    const user=await handleResponse(response, logout);
+    const user = await handleResponse<User>(response, logout);
     // store user details and jwt token in local storage to keep user logged in between page refreshes
-    localStorage.setItem('user',JSON.stringify(user));
+    localStorage.setItem('user', JSON.stringify(user));
     return user;
 }
 
@@ -37,40 +32,37 @@ export function logout() {
     localStorage.removeItem('user');
 }
 
-/**
- * @param {any} userId
- */
-async function getAll(userId) {
-    const requestOptions = {
+async function getAll(userId: string): Promise<User[]> {
+    const requestOptions: RequestInit = {
         method: 'GET',
         headers: authHeader()
     };
 
-    const response = await fetch(`${apiUrl}/admin/${userId}/users`,requestOptions);
-    return handleResponse(response, logout);
+    const response = await fetch(`${apiUrl}/admin/${userId}/users`, requestOptions);
+    return handleResponse<User[]>(response, logout);
 }
 
 /**
  * @param {any} user
  * @param {any} userId
  */
-async function register(userId, user) {
-    const requestOptions = {
+async function register(userId: string, user: any) {
+    const requestOptions: RequestInit = {
         method: 'POST',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
     };
 
-    const response = await fetch(`${apiUrl}/admin/${userId}/users`,requestOptions);
-    return handleResponse(response, logout);
+    const response = await fetch(`${apiUrl}/admin/${userId}/users`, requestOptions);
+    return handleResponse<User>(response, logout);
 }
 
 /**
  * @param {any} user
  * @param {any} userId
  */
-async function update(userId, user) {
-    const requestOptions = {
+async function update(userId: string, user: any) {
+    const requestOptions: RequestInit = {
         method: 'PUT',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
@@ -85,8 +77,8 @@ async function update(userId, user) {
  * @param {string} id
  * @param {any} userId
  */
-async function _delete(userId, id) {
-    const requestOptions = {
+async function _delete(userId: string, id: string) {
+    const requestOptions: RequestInit = {
         method: 'DELETE',
         headers: authHeader()
     };

@@ -1,72 +1,34 @@
-/* eslint-disable react/prop-types */
-import { Component } from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import { withSnackbar } from 'notistack';
-import { alertActions } from '../_actions';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Snackbar, makeStyles, Theme } from '@material-ui/core';
+import MuiAlert, { AlertProps } from '@material-ui/core/Alert';
+import { BaseAlertAction } from '../_actions';
 
-class Notifier extends Component {
-    displayed = [];
+const Alert = React.forwardRef((props: AlertProps, ref) => 
+    <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />);
 
-    storeDisplayed = (id) => {
-        this.displayed = [...this.displayed, id];
-    };
+const useStyles = makeStyles((theme: Theme) => ({
+    root: {
+      width: '100%',
+      '& > * + *': {
+        marginTop: theme.spacing(2),
+      },
+    },
+    alert: {
+      width: '100%',
+    },
+  })
+);
 
-    shouldComponentUpdate({ notifications: newSnacks = [] }) {
-        if (!newSnacks.length) {
-            this.displayed = [];
-            return false;
-        }
+function Notifier() {
+    const classes = useStyles();
+    const notification = useSelector((state: { alert: BaseAlertAction }) => state.alert);
 
-        const { notifications: currentSnacks } = this.props;
-        let notExists = false;
-        for (let i = 0; i < newSnacks.length; i += 1) {
-            const newSnack = newSnacks[i];
-            if (newSnack.dismissed) {
-                this.props.closeSnackbar(newSnack.key);
-                this.props.remove(newSnack.key);
-            }
-
-            if (notExists) continue;
-            notExists = notExists || !currentSnacks.filter(({ key }) => newSnack.key === key).length;
-        }
-        return notExists;
-    }
-
-    componentDidUpdate() {
-        const { notifications = [] } = this.props;
-
-        notifications.forEach(({ key, message, options = {} }) => {
-            // Do nothing if snackbar is already displayed
-            if (this.displayed.includes(key)) return;
-            // Display snackbar using notistack
-            this.props.enqueueSnackbar(message, {
-                ...options,
-                onClose: (event, reason, key) => {
-                    if (options.onClose) {
-                        options.onClose(event, reason, key);
-                    }
-                    // Dispatch action to remove snackbar from redux store
-                    this.props.remove(key);
-                }
-            });
-            // Keep track of snackbars that we've displayed
-            this.storeDisplayed(key);
-        });
-    }
-
-    render() {
-        return null;
-    }
+    return (<Snackbar open={!!notification}>
+        <Alert severity={notification.options.variant} className={classes.alert}>
+            {notification.message}
+        </Alert>
+    </Snackbar>);
 }
 
-const mapStateToProps = state => ({
-    notifications: state.alert,
-});
-
-const mapDispatchToProps = dispatch => bindActionCreators({ remove: alertActions.remove }, dispatch);
-
-export default withSnackbar(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(Notifier));
+export default Notifier

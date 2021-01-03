@@ -1,15 +1,16 @@
 // @ts-check
+import { UserActionType } from '../_actions';
 import { userConstants } from '../_constants';
+import { RegisterUserState } from '../_models/state';
 
-/** @param {{ type: string; }} action */
-export function registration(state = {}, action) {
+export function registration(state = {registering: false}, action: UserActionType): RegisterUserState {
   switch (action.type) {
     case userConstants.REGISTER_REQUEST:
       return { registering: true };
     case userConstants.REGISTER_SUCCESS:
-      return {};
+      return {registering: false};
     case userConstants.REGISTER_FAILURE:
-      return {};
+      return {registering: false, error: action.payload?.error};
     default:
       return state
   }
