@@ -18,7 +18,7 @@ export function alert(state = initialState, action: AlertActionTypes) {
                     }
                 };
         case alertConstants.CLEAR:
-            return state.key === action.key ? {} : state;
+            return initialState;
         default:
             return state;
     }

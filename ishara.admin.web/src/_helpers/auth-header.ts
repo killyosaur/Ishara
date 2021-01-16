@@ -1,9 +1,14 @@
-// @ts-check
-export function authHeader() {
-    // return authorization header with jwt token
-    var request = localStorage.getItem('user');
+import { User } from "../_models";
 
-    let user = request ? JSON.parse(request) : null;
+interface LocalUser extends User {
+    token: string;
+}
+
+export function authHeader(): Headers {
+    // return authorization header with jwt token
+    let request = localStorage.getItem('user');
+
+    let user: LocalUser = request ? JSON.parse(request) : null;
 
     if (user && user.token) {
         return new Headers({ 'Authorization': 'Bearer ' + user.token });

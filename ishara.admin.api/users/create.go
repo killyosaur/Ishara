@@ -15,14 +15,14 @@ import (
 
 // CreateUserDto ...
 type CreateUserDto struct {
-	ID        uuid.UUID `json:"id"`
-	Username  string    `json:"username"`
-	FirstName string    `json:"firstName"`
-	LastName  string    `json:"lastName"`
-	Password  string    `json:"password"`
-	Biography string    `json:"bio"`
-	IsAdmin   bool      `json:"isAdmin"`
-	IsAuthor  bool      `json:"isAuthor"`
+	Username  string   `json:"username"`
+	FirstName string   `json:"firstName"`
+	LastName  string   `json:"lastName"`
+	Password  string   `json:"password"`
+	Biography string   `json:"bio"`
+	IsAdmin   bool     `json:"isAdmin"`
+	IsAuthor  bool     `json:"isAuthor"`
+	Access    []string `json:"access"`
 }
 
 // CreateUser for getting the user data from the database
@@ -40,7 +40,8 @@ type CreateUser struct {
 func Create(dbDriver *data.Driver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var userDto CreateUserDto
-		json.NewDecoder(r.Body).Decode(&userDto)
+
+		err := json.NewDecoder(r.Body).Decode(&userDto)
 
 		key, err := createUser(dbDriver, userDto)
 

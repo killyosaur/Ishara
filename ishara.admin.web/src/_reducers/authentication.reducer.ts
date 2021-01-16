@@ -35,7 +35,8 @@ export function authentication(state = initialState, action: UserActionType): Us
     case userConstants.LOGOUT:
       return {
         ...state,
-        user: undefined
+        user: undefined,
+        loggedIn: false
       };
     default:
       return state

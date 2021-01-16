@@ -25,6 +25,6 @@ function information(message: string): InfoAlertAction {
     return { key: new Date().getTime() + Math.random(), type: alertConstants.INFORMATION, message, options: {variant: 'info'} };
 }
 
-function clear(key: number): ClearAlertAction {
-    return { type: alertConstants.CLEAR, key };
+function clear(): ClearAlertAction {
+    return { type: alertConstants.CLEAR, key: 0 };
 }

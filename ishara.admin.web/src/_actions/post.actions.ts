@@ -22,7 +22,6 @@ function create(userId: string, post: Post) {
                     dispatch(success(userId, post));
                     dispatch(alertActions.success('Post successful'));
                 },
-                /** @param {Error} error */
                 error => {
                     dispatch(failure(error.toString()));
                     dispatch(alertActions.error(error.toString()));

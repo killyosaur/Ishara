@@ -24,9 +24,9 @@ function Notifier() {
     const classes = useStyles();
     const notification = useSelector((state: { alert: BaseAlertAction }) => state.alert);
 
-    return (<Snackbar open={!!notification}>
-        <Alert severity={notification.options.variant} className={classes.alert}>
-            {notification.message}
+    return (<Snackbar open={!!notification?.message}>
+        <Alert severity={notification?.options?.variant || 'success'} className={classes.alert}>
+            {notification?.message}
         </Alert>
     </Snackbar>);
 }

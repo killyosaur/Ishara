@@ -4,6 +4,7 @@ import { PostsState, PostState } from '../_models/state';
 
 const initialState: PostsState = {
   loading: false,
+  loaded: false,
   posts: []
 };
 
@@ -19,6 +20,7 @@ export function posts(state = initialState, action: PostActionTypes) {
       return {
         ...state,
         loading: false,
+        loaded: true,
         posts: getSuccPayload.posts.map<PostState>(post => {
           return {post, deleting: false};
         })
@@ -82,6 +84,8 @@ export function posts(state = initialState, action: PostActionTypes) {
         const errPayload = action.payload as ErrorPayload;
         return {
           ...state,
+          loaded: true,
+          loading: false,
           error: errPayload.error
         }
       case postConstants.CREATE_REQUEST:

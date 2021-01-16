@@ -48,6 +48,10 @@ func Get(dbDriver *data.Driver) http.HandlerFunc {
 			return
 		}
 
+		if postDtos == nil {
+			controllers.RespondWithJSON(w, 200, []GetPostDto{})
+			return
+		}
 		controllers.OK(w, postDtos)
 	}
 }

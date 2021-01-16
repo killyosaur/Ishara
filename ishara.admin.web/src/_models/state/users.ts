@@ -9,6 +9,7 @@ export interface UserState {
 
 export interface UsersState {
     loading: boolean;
+    loaded: boolean;
     users: {user: User, deleting: boolean, deleteError?: Error}[];
     error?: Error;
 }

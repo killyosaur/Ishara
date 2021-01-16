@@ -7,6 +7,7 @@ export interface PostState {
 
 export interface PostsState {
     loading: boolean;
+    loaded: boolean;
     posts: PostState[];
     error?: Error;
 }

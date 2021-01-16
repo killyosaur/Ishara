@@ -4,7 +4,7 @@ import { userConstants } from '../_constants';
 import { User } from '../_models';
 import { UsersState } from '../_models/state';
 
-const initialState: UsersState = {loading: true, users: []};
+const initialState: UsersState = {loading: false, loaded: false, users: []};
 
 export function users(state = initialState, action: UserActionType): UsersState {
   switch (action.type) {
@@ -17,6 +17,8 @@ export function users(state = initialState, action: UserActionType): UsersState 
       const succGetPayload = action.payload as UsersPayload;
       return succGetPayload.users ? {
         ...state,
+        loading: false,
+        loaded: true,
         users: succGetPayload.users.map<{user: User, deleting: boolean}>(u => {
           return {user: u, deleting: false};
         })
@@ -25,6 +27,8 @@ export function users(state = initialState, action: UserActionType): UsersState 
       const errGetPayload = action.payload as UsersPayload;
       return { 
         ...state,
+        loading: false,
+        loaded: true,
         error: errGetPayload.error
       };
     case userConstants.DELETE_REQUEST:

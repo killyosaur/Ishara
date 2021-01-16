@@ -8,37 +8,44 @@ export const postService = {
     update,
     delete: _delete
 }
-const api = process.env.REACT_APP_ADMIN_API;
 
-async function getAll(userId: string) {
-    const requestOptions = {
+const api = process.env.REACT_APP_ADMIN_API || '';
+
+async function getAll(userId: string): Promise<Post[]> {
+    const requestOptions: RequestInit = {
         method: 'GET',
         headers: authHeader()
     };
 
-    const response = await fetch(`${api}/admin/${userId}/posts`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts`, requestOptions);
     return handleResponse<Post[]>(response);
 }
 
 async function create(userId: string, post: Post) {
+    const headers = authHeader();
+    headers.append('Content-Type', 'application/json');
+
     const requestOptions = {
         method: 'POST',
-        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(post)
     };
 
-    const response = await fetch(`${api}/admin/${userId}/posts`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts`, requestOptions);
     return handleResponse<string>(response);
 }
 
 async function update(userId: string, post: Post) {
+    const headers = authHeader();
+    headers.append('Content-Type', 'application/json');
+
     const requestOptions = {
         method: 'PUT',
-        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(post)
     };
 
-    const response = await fetch(`${api}/admin/${userId}/posts/${post.id}`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts/${post.id}`, requestOptions);
     return handleResponse<string>(response);
 }
 
@@ -49,6 +56,6 @@ async function _delete(userId: string, id: string) {
         headers: authHeader()
     };
 
-    const response = await fetch(`${api}/admin/${userId}/posts/${id}`,requestOptions);
+    const response = await fetch(`${api}/admin/${userId}/posts/${id}`, requestOptions);
     return handleResponse(response);
 }

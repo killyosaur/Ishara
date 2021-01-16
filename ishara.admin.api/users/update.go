@@ -25,6 +25,7 @@ type UpdateUserDto struct {
 	LastName  string    `json:"lastName"`
 	Password  string    `json:"password"`
 	Biography string    `json:"bio"`
+	Access    []string  `json:"access"`
 }
 
 // UpdateUser ...

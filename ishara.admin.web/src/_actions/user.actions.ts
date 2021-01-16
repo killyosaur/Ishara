@@ -40,7 +40,7 @@ function logout() {
     return { type: userConstants.LOGOUT };
 }
 
-function register(userId: string, user: User) {
+function register(userId: string, user: any) {
     return (dispatch: Function) => {
         dispatch(request(user));
 

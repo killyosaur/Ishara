@@ -42,14 +42,13 @@ async function getAll(userId: string): Promise<User[]> {
     return handleResponse<User[]>(response, logout);
 }
 
-/**
- * @param {any} user
- * @param {any} userId
- */
 async function register(userId: string, user: any) {
+    const headers = authHeader();
+    headers.append('Content-Type', 'application/json');
+
     const requestOptions: RequestInit = {
         method: 'POST',
-        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(user)
     };
 
@@ -57,14 +56,13 @@ async function register(userId: string, user: any) {
     return handleResponse<User>(response, logout);
 }
 
-/**
- * @param {any} user
- * @param {any} userId
- */
 async function update(userId: string, user: any) {
+    const headers = authHeader();
+    headers.append('Content-Type', 'application/json');
+
     const requestOptions: RequestInit = {
         method: 'PUT',
-        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(user)
     };
 
