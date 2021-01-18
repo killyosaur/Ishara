@@ -9,18 +9,20 @@ import (
 
 	"github.com/google/uuid"
 
-	"../controllers"
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/controllers"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 // CreateUserDto ...
 type CreateUserDto struct {
-	ID        uuid.UUID `json:"id"`
-	Username  string    `json:"username"`
-	FirstName string    `json:"firstName"`
-	LastName  string    `json:"lastName"`
-	Password  string    `json:"password"`
-	Biography string    `json:"bio"`
+	Username  string   `json:"username"`
+	FirstName string   `json:"firstName"`
+	LastName  string   `json:"lastName"`
+	Password  string   `json:"password"`
+	Biography string   `json:"bio"`
+	IsAdmin   bool     `json:"isAdmin"`
+	IsAuthor  bool     `json:"isAuthor"`
+	Access    []string `json:"access"`
 }
 
 // CreateUser for getting the user data from the database
@@ -38,7 +40,8 @@ type CreateUser struct {
 func Create(dbDriver *data.Driver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var userDto CreateUserDto
-		json.NewDecoder(r.Body).Decode(&userDto)
+
+		err := json.NewDecoder(r.Body).Decode(&userDto)
 
 		key, err := createUser(dbDriver, userDto)
 
@@ -48,6 +51,33 @@ func Create(dbDriver *data.Driver) http.HandlerFunc {
 			controllers.Created(w, key)
 		}
 	}
+}
+
+// CreateRootUser ...
+func CreateRootUser(dbDriver *data.Driver) string {
+	ctx := context.Background()
+
+	if userNameExists(ctx, dbDriver, "root") {
+		return ""
+	}
+
+	setAccessTypes(ctx, dbDriver)
+
+	password := GeneratePassword()
+
+	newUser := CreateUserDto{
+		Username:  "root",
+		Biography: "The First User",
+		FirstName: "Root",
+		LastName:  "User",
+		Password:  password,
+		IsAdmin:   true,
+		IsAuthor:  false,
+	}
+
+	createUser(dbDriver, newUser)
+
+	return password
 }
 
 func createUser(dbDriver *data.Driver, userDto CreateUserDto) (uuid.UUID, error) {
@@ -83,6 +113,20 @@ func createUser(dbDriver *data.Driver, userDto CreateUserDto) (uuid.UUID, error)
 	_, err = userCol.CreateDocument(ctx, newUser)
 	if err != nil {
 		return uuid.UUID{}, err
+	}
+
+	if userDto.IsAdmin {
+		err = setAccess(ctx, dbDriver, newUser.Key, "Administrator")
+		if err != nil {
+			return uuid.UUID{}, err
+		}
+	}
+
+	if userDto.IsAuthor {
+		err = setAccess(ctx, dbDriver, newUser.Key, "Author")
+		if err != nil {
+			return uuid.UUID{}, err
+		}
 	}
 
 	_, err = CreatePassword(ctx, dbDriver, newUser.Key, userDto.Password)

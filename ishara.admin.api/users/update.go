@@ -13,8 +13,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"../controllers"
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/controllers"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 // UpdateUserDto ...
@@ -25,6 +25,7 @@ type UpdateUserDto struct {
 	LastName  string    `json:"lastName"`
 	Password  string    `json:"password"`
 	Biography string    `json:"bio"`
+	Access    []string  `json:"access"`
 }
 
 // UpdateUser ...

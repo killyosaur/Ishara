@@ -4,8 +4,8 @@ import (
 	"context"
 	"strconv"
 
-	"../data"
-	"../models"
+	"github.com/killyosaur/ishara/ishara.api/data"
+	"github.com/killyosaur/ishara/ishara.api/models"
 )
 
 func getAllPosts(dbDriver *data.DriverData, limit int64, page int64) (*models.PostsDto, error) {

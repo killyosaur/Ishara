@@ -1,39 +1,45 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth"
 
-	"./data"
-	"./posts"
-	"./users"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
+	"github.com/killyosaur/ishara/ishara.admin.api/posts"
+	"github.com/killyosaur/ishara/ishara.admin.api/users"
 )
 
 const (
 	dbName    = "IsharaDB"
 	graphName = "Ishara"
-	dbHost    = "localhost"
-	dbPort    = 8529
 )
 
 func main() {
 	var err error
+	port, _ := strconv.ParseInt(os.Getenv("DB_PORT"), 10, 64)
+
 	dbDriver, err := data.Connect(data.ConnectionOptions{
 		DatabaseName: dbName,
 		GraphName:    graphName,
-		Host:         dbHost,
-		Port:         dbPort,
+		Host:         os.Getenv("DB_HOST"),
+		Port:         port,
 		Username:     os.Getenv("DB_USER"),
 		Password:     os.Getenv("DB_PWRD"),
 	})
+
 	if err != nil {
 		panic(err)
 	}
+
+	pass := users.CreateRootUser(dbDriver)
+	fmt.Print("admin password: " + pass)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
@@ -45,7 +51,7 @@ func main() {
 		rt.Mount("/admin", routers(dbDriver))
 	})
 
-	http.ListenAndServe("localhost:5000", r)
+	http.ListenAndServe(":5000", r)
 }
 
 func getCors() func(next http.Handler) http.Handler {
@@ -62,7 +68,8 @@ func getCors() func(next http.Handler) http.Handler {
 
 func routers(dbDriver *data.Driver) http.Handler {
 	router := chi.NewRouter()
-	auth := jwtauth.New("HS512", []byte(os.Getenv("ISHARA_SECRET")), nil)
+	secret := os.Getenv("ISHARA_SECRET")
+	auth := jwtauth.New("HS512", []byte(secret), nil)
 
 	router.Group(func(r chi.Router) {
 		r.Post("/authenticate", users.Authenticate(auth, dbDriver))

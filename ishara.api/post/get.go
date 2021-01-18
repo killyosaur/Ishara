@@ -3,10 +3,10 @@ package post
 import (
 	"net/http"
 
-	"../data"
-	"../infrastructure"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
+	"github.com/killyosaur/ishara/ishara.api/data"
+	"github.com/killyosaur/ishara/ishara.api/infrastructure"
 )
 
 // Get ...

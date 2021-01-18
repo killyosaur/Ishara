@@ -12,8 +12,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"../controllers"
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/controllers"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 // AuthenticateUserDto For retrieving data from the client
@@ -22,7 +22,7 @@ type AuthenticateUserDto struct {
 	Username  string    `json:"username"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
-	IsAdmin   bool      `json:"isAdmin"`
+	Access    []string  `json:"access"`
 	Token     string    `json:"token"`
 }
 
@@ -53,7 +53,9 @@ func authenticateService(userDto map[string]string, auth *jwtauth.JWTAuth, dbDri
 	ctx := context.Background()
 	user := getUser(ctx, dbDriver, username)
 
-	if (user == AuthenticateUserDto{}) {
+	if (user.Access == nil && user.FirstName == "" && user.ID == uuid.UUID{} &&
+		user.LastName == "" && user.Token == "" && user.Username == "") ||
+		!validateAccess(user.Access) {
 		return nil, usernameOrPasswordException()
 	}
 
@@ -69,6 +71,8 @@ func authenticateService(userDto map[string]string, auth *jwtauth.JWTAuth, dbDri
 	claim := jwt.MapClaims{
 		"Username": username,
 		"UserID":   user.ID,
+		"IsAdmin":  hasAccess(user.Access, Admin),
+		"IsAuthor": hasAccess(user.Access, Author),
 	}
 
 	token, err := getEncodedToken(auth, claim, time.Hour)
@@ -80,6 +84,24 @@ func authenticateService(userDto map[string]string, auth *jwtauth.JWTAuth, dbDri
 	user.Token = token
 
 	return user, nil
+}
+
+func validateAccess(list []string) bool {
+	for _, b := range list {
+		if b == Admin || b == Author {
+			return true
+		}
+	}
+	return false
+}
+
+func hasAccess(list []string, value string) bool {
+	for _, b := range list {
+		if b == value {
+			return true
+		}
+	}
+	return false
 }
 
 func getEncodedToken(auth *jwtauth.JWTAuth, claim jwt.MapClaims, expiry time.Duration) (string, error) {
@@ -95,7 +117,7 @@ func getEncodedToken(auth *jwtauth.JWTAuth, claim jwt.MapClaims, expiry time.Dur
 }
 
 func getUser(ctx context.Context, dbDriver *data.Driver, username string) AuthenticateUserDto {
-	query := "FOR u IN user FOR a IN 1..1 OUTBOUND u._id accessed_as FILTER u.Username == @username RETURN { id: u._key, firstName: u.FirstName, lastName: u.LastName, username: u.Username, isAdmin: a.Type == 'Administrator' }"
+	query := "FOR u IN user FILTER u.Username == @username RETURN MERGE({ id: u._key, firstName: u.FirstName, lastName: u.LastName, username: u.Username }, { access: (FOR a IN 1..1 OUTBOUND u._id accessed_as RETURN a.Type) })"
 	bindVars := map[string]interface{}{
 		"username": username,
 	}

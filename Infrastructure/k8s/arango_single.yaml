@@ -1,0 +1,16 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "anarchy-db"
+spec:
+  bootstrap:
+    passwordSecretNames:
+      root: arango-root
+  mode: Single
+  image: "arangodb/arangodb:latest"
+  type: None
+  single:
+    resources:
+      requests:
+        storage: 20Gi
+    storageClassName: do-block-storage

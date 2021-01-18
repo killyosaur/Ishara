@@ -2,14 +2,15 @@ package posts
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 
-	"../controllers"
-	"../data"
+	"github.com/killyosaur/ishara/ishara.admin.api/controllers"
+	"github.com/killyosaur/ishara/ishara.admin.api/data"
 )
 
 // GetPostDto ...
@@ -47,6 +48,10 @@ func Get(dbDriver *data.Driver) http.HandlerFunc {
 			return
 		}
 
+		if postDtos == nil {
+			controllers.RespondWithJSON(w, 200, []GetPostDto{})
+			return
+		}
 		controllers.OK(w, postDtos)
 	}
 }
@@ -57,9 +62,9 @@ func getAllPosts(dbDriver *data.Driver, userID uuid.UUID, limit int64, page int6
 	query := "FOR p IN post FOR u IN 1..1 OUTBOUND p._id written_by FILTER u._key == @userId "
 
 	if limit > 0 {
-		skipAndLimit := string(limit)
+		skipAndLimit := fmt.Sprint(limit)
 		if page > 1 {
-			skipAndLimit = string(page*limit) + "," + skipAndLimit
+			skipAndLimit = fmt.Sprint(page*limit) + "," + skipAndLimit
 		}
 		query = query + "LIMIT " + skipAndLimit + " "
 	}

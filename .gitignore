@@ -1,3 +1,14 @@
 node_modules/
 **/*.exe
 build/
+**/debug
+**/.env
+
+**/.terraform
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.pem
+*.jwtSecret
+**kubeconfig.yaml
+ishara.admin.api/__debug_bin

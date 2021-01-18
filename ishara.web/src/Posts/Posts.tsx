@@ -1,8 +1,8 @@
 import  React, {useState, useEffect} from 'react';
-import { Grid, Paper, Typography, makeStyles, Divider } from '@material-ui/core';
+import { Grid, Typography, makeStyles, Divider } from '@material-ui/core';
 import {format} from 'date-fns';
 import { Post, PostService } from '../_services';
-import settings from "../settings";
+import ReactMarkdown from 'react-markdown';
 
 const emptyPosts: Post[] = [];
 
@@ -24,15 +24,19 @@ const useStyles = makeStyles({
         }
     },
     horizontalDivider: {
-        borderRight: '1px rgba(255, 255, 255, 0.12) solid',
+        height: '1rem',
+        display: 'inline-block',
+        borderRight: '1px rgba(0, 0, 0, 0.12) solid',
         marginRight: '0.35rem',
-        paddingRight: '0.35rem'
+        paddingRight: '0.35rem',
+        marginleft: '0.35rem',
+        paddingLeft: '0.35rem'
     }
 });
 
 function Posts() {
     const classes = useStyles();
-    const {pageCount} = settings;
+    const dateFormat = process.env.REACT_APP_DATE_FORMAT || "";
 
     const [data, setData] = useState({
         posts: emptyPosts,
@@ -48,6 +52,7 @@ function Posts() {
     
     useEffect(() => {
         async function fetchData() {
+            const pageCount = parseInt(process.env.REACT_APP_PAGE_COUNT || '0');
             const {current} = data.pages;
 
             let next = data.pages.next;
@@ -77,29 +82,30 @@ function Posts() {
         }
 
         fetchData();
-    }, [data, page, pageCount])
+    }, [data, page])
 
     return (<Grid item xs={12}>
         {
             data.posts.map((p: Post) => 
-            <Paper className={classes.paper} key={p.id}>
+            <Grid className={classes.paper} key={p.id}>
                 <Typography variant="h4" component="h4">
                     {p.title}
                 </Typography>
                 <Divider />
-                <Typography variant="body1">
-                    {p.content}
+                <Typography variant="body1" component="div">
+                    <ReactMarkdown children={p.content} />
                 </Typography>
                 <Divider />
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1" className={classes.horizontalDivider}>
+                    <Typography variant="subtitle1" component="small">
                         {p.author.username}
                     </Typography>
-                    <Typography variant="subtitle1">
-                        {format(p.publishedOn, settings.dateFormat)}
+                    <div className={classes.horizontalDivider} />
+                    <Typography variant="subtitle1" component="small">
+                        {format(p.publishedOn, dateFormat)}
                     </Typography>
                 </Grid>
-            </Paper>)
+            </Grid>)
         }
     </Grid>);
 }
