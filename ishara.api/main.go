@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	dbName    = "Ishara"
+	dbName    = "IsharaDB"
 	graphName = "Ishara"
 )
 
@@ -31,6 +31,7 @@ func main() {
 		Username:     os.Getenv("DB_USER"),
 		Password:     os.Getenv("DB_PWRD"),
 	})
+
 	if err != nil {
 		panic(err)
 	}

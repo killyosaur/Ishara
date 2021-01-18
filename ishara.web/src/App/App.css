@@ -20,3 +20,21 @@
 .App-link {
   color: #09d3ac;
 }
+
+@font-face {
+  font-family: 'cf_anarchyregular';
+  src: url('../fonts/cfanarchy-regular-webfont.woff2') format('woff2'),
+       url('../fonts/cfanarchy-regular-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+@font-face {
+  font-family: 'saira_stencil_oneregular';
+  src: url('../fonts/sairastencilone-regular-webfont.woff2') format('woff2'),
+       url('../fonts/sairastencilone-regular-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}

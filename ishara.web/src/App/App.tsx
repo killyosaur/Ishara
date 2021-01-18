@@ -1,3 +1,4 @@
+import logo from '../logo.svg';
 import React from 'react';
 import { 
   createMuiTheme,
@@ -29,21 +30,24 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     height: '100%',
     display: 'flex',
     marginTop: '75px'
+  },
+  logo: {
+    height: '4rem'
+  },
+  title: {
+    fontFamily: 'cf_anarchyregular !important',
+    '& span': {
+      fontFamily: 'saira_stencil_oneregular'
+    }
+  },
+  titleToolbar: {
+    justifyContent: 'center'
   }
 }));
 
 const App: React.FC = () => {
   const theme = createMuiTheme({
-    palette: {
-      type: 'dark'
-    },
-    props: {
-      MuiTypography: {
-        variantMapping: {
-          subtitle1: 'small'
-        }    
-      }
-    }
+    palette: {},
   });
 
   const classes = useStyles();
@@ -53,9 +57,10 @@ const App: React.FC = () => {
       <Container maxWidth="lg">
         <Grid container className={classes.grid}>
           <AppBar position="fixed" color="inherit">
-            <Toolbar>
-              <Typography variant="h6">
-                Anarchy for Sale
+            <Toolbar className={classes.titleToolbar}>
+              <img src={logo} alt="logo" className={classes.logo} />
+              <Typography variant="h3" className={classes.title}>
+                narchy <span>for Sale</span>
               </Typography>
             </Toolbar>
           </AppBar>
