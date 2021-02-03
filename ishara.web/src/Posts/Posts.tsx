@@ -3,6 +3,7 @@ import { Grid, Typography, makeStyles, Divider } from '@material-ui/core';
 import {format} from 'date-fns';
 import { Post, PostService } from '../_services';
 import ReactMarkdown from 'react-markdown';
+import gfm from 'remark-gfm';
 
 const emptyPosts: Post[] = [];
 
@@ -93,7 +94,7 @@ function Posts() {
                 </Typography>
                 <Divider />
                 <Typography variant="body1" component="div">
-                    <ReactMarkdown children={p.content} />
+                    <ReactMarkdown children={p.content} plugins={[gfm]} />
                 </Typography>
                 <Divider />
                 <Grid item xs={12}>
