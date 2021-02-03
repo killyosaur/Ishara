@@ -7,6 +7,7 @@ import { userActions } from "../_actions";
 import { Link } from "react-router-dom";
 
 const drawerWidth = 250;
+const drawerBleeding = 20;
 
 const useStyles = makeStyles(({ spacing, mixins, breakpoints }: Theme) => createStyles({
     drawerHeader: {
@@ -80,6 +81,11 @@ const NavMenu: FC<{isAdmin?: boolean, isAuthor?: boolean, user: User, className:
                     anchor="left"
                     open={mobileOpen}
                     onClose={toggle(false)}
+                    swipeAreaWidth={drawerBleeding}
+                    disableSwipeToOpen={false}
+                    ModalProps={{
+                        keepMounted: true
+                    }}
                     onOpen={toggle(true)}>
                         <div className={classes.toolbar}>
                             <Typography className={classes.drawerHeader} variant='h4'>{user.username}</Typography>
