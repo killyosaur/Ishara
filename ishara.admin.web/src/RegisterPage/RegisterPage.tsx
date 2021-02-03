@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {connect, ConnectedProps} from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import {Grid, TextField, Button, Typography, Checkbox, FormControlLabel, makeStyles} from '@material-ui/core';
@@ -47,18 +47,20 @@ const RegisterPage: React.FC<Props> = props => {
     const {userId} = props.match.params;
     const [editUser, setEditUser] = useState(defaultUser);
 
-    if(userId) {
-        const user = users.users.filter(u => u.user.id === userId);
-        if(user.length > 0)
-        {
-            const {id, username, firstName, lastName, bio } = user[0].user;
-            const isAdmin = !!user[0].user.access?.some(a => a === 'Administrator');
-            const isAuthor = !!user[0].user.access?.some(a => a === 'Author');
-            const newEditUser: EditUser = {id, username, firstName, lastName, bio, password: '', isAuthor, isAdmin};
-
-            setEditUser(newEditUser);
+    useEffect(() => {
+        if(userId) {
+            const user = users.users.filter(u => u.user.id === userId);
+            if(user.length > 0)
+            {
+                const {id, username, firstName, lastName, bio } = user[0].user;
+                const isAdmin = !!user[0].user.access?.some(a => a === 'Administrator');
+                const isAuthor = !!user[0].user.access?.some(a => a === 'Author');
+                const newEditUser: EditUser = {id, username, firstName, lastName, bio, password: '', isAuthor, isAdmin};
+    
+                setEditUser(newEditUser);
+            }
         }
-    }
+    }, [users, userId, setEditUser]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value, checked} = e.target;

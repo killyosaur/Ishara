@@ -67,11 +67,12 @@ resource "digitalocean_app" "ishara_admin" {
     domains = [local.admin_url]
 
     static_site {
-      name           = "web"
-      build_command  = "npm run build"
-      source_dir     = "ishara.admin.web"
-      output_dir     = "build"
-      index_document = "index.html"
+      name              = "web"
+      build_command     = "npm run build"
+      source_dir        = "ishara.admin.web"
+      output_dir        = "build"
+      index_document    = "index.html"
+      catchall_document = "index.html"
 
       github {
         branch         = "main"

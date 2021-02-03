@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import {
     TextField, Button, Grid, createStyles, Theme, makeStyles, Box
@@ -50,16 +50,18 @@ type Props = ConnectedProps<typeof connector> & RouteComponentProps<RouteParams>
 
 const Form: React.FC<Props> = (props) => {
     const {postId} = props.match.params;
+    const {posts} = props;
     const classes = useStyles();
 
     const [post, setPost] = useState(defaultState);
 
-    if(postId) {
-        const {posts} = props;
-        const post = posts.posts.filter(p => p.post.id === postId);
-
-        post.length > 0 && setPost(post[0].post);
-    }
+    useEffect(() => {
+        if (postId) {
+            const post = posts.posts.filter(p => p.post.id === postId);
+    
+            post.length > 0 && setPost(post[0].post);
+        }
+    }, [postId, posts, setPost]);
 
     const handleChangeField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name } = event.currentTarget;
