@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     marginTop: '75px'
   },
   logo: {
-    height: '4rem'
+    height: '3rem'
   },
   title: {
     fontFamily: 'cf_anarchyregular !important',
@@ -59,7 +59,7 @@ const App: React.FC = () => {
           <AppBar position="fixed" color="inherit">
             <Toolbar className={classes.titleToolbar}>
               <img src={logo} alt="logo" className={classes.logo} />
-              <Typography variant="h3" className={classes.title}>
+              <Typography variant="h4" className={classes.title}>
                 narchy <span>for Sale</span>
               </Typography>
             </Toolbar>
