@@ -3,6 +3,9 @@ kind: "ArangoDeployment"
 metadata:
   name: "anarchy-db-cluster"
 spec:
+  bootstrap:
+    passwordSecretNames:
+      root: arango-root
   mode: Cluster
   image: "arangodb/arangodb:latest"
   type: None

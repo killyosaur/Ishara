@@ -24,6 +24,7 @@ RUN cp /build/admin .
 # Build a small image
 FROM alpine
 
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=builder /dist/admin /
 
 EXPOSE 5000

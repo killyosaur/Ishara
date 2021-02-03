@@ -15,7 +15,7 @@ func Connect(options DriverConfig) (*DriverData, error) {
 	var err error
 
 	conn, err := http.NewConnection(http.ConnectionConfig{
-		Endpoints: []string{fmt.Sprintf("http://%s:%d", options.Host, options.Port)},
+		Endpoints: []string{fmt.Sprintf("%s:%d", options.Host, options.Port)},
 	})
 
 	if err != nil {

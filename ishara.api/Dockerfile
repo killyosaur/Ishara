@@ -22,8 +22,9 @@ WORKDIR /dist
 RUN cp /build/api .
 
 # Build a small image
-FROM scratch
+FROM alpine
 
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=builder /dist/api /
 
 EXPOSE 5001

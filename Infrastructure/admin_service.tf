@@ -20,7 +20,8 @@ resource "kubernetes_secret" "ishara_secret" {
 
 resource "kubernetes_deployment" "admin_api" {
   metadata {
-    name = "anarchyforsale-admin"
+    name      = "anarchyforsale-admin"
+    namespace = "anarchy-for-sale"
 
     annotations = {}
     labels      = {
@@ -29,7 +30,7 @@ resource "kubernetes_deployment" "admin_api" {
   }
 
   spec {
-    replicas = 2
+    replicas = 1
 
     selector {
       match_labels = {
@@ -49,8 +50,13 @@ resource "kubernetes_deployment" "admin_api" {
       spec {
         container {
           name  = "admin"
-          image = "killyosaur/ishara.admin.api:0.0.3"
+          image = "killyosaur/ishara.admin.api:0.0.7"
           args  = []
+
+          env {
+            name  = "CLIENT_ORIGIN"
+            value = digitalocean_app.ishara_admin.live_url
+          }
 
           env {
             name  = "DB_PORT"
@@ -59,7 +65,7 @@ resource "kubernetes_deployment" "admin_api" {
 
           env {
             name  = "DB_HOST"
-            value = "http+ssl://anarchy-db-cluster" 
+            value = "https://anarchy-db.anarchy-for-sale.svc" 
           }
 
           env {
@@ -68,7 +74,7 @@ resource "kubernetes_deployment" "admin_api" {
             value_from {
               secret_key_ref {
                 key  = "username"
-                name = kubernetes_secret.ishara_secret.metadata[0].name
+                name = kubernetes_secret.root_application_password.metadata[0].name
               }
             } 
           }
@@ -79,12 +85,49 @@ resource "kubernetes_deployment" "admin_api" {
             value_from {
               secret_key_ref {
                 key  = "password"
+                name = kubernetes_secret.root_application_password.metadata[0].name
+              }
+            } 
+          }
+
+          env {
+            name  = "ISHARA_SECRET"
+
+            value_from {
+              secret_key_ref {
+                key  = "value"
                 name = kubernetes_secret.ishara_secret.metadata[0].name
               }
             } 
           }
+
+          volume_mount {
+            mount_path = "/etc/ssl/certs/anarchy-db.pem"
+            name       = "ca-cert"
+            sub_path   = "ca.crt"
+            read_only  = false
+          }
+
+          port {
+            container_port = 5000
+            protocol       = "TCP"
+          }
         }
 
+        volume {
+          name = "ca-cert"
+          secret {
+            secret_name = "anarchy-db-ca"
+          }
+        }
+
+        volume {
+          name = "tls-cert"
+          secret {
+            secret_name = "anarchy-db-ca"
+          }
+        }
+        
         node_selector = {}
       }
     }
@@ -103,13 +146,18 @@ resource "kubernetes_deployment" "admin_api" {
 
 resource "kubernetes_service" "admin_api" {
   metadata {
-    name = "anarchyforsale-admin-api"
+    name      = "anarchyforsale-admin-api"
+    namespace = "anarchy-for-sale"
 
     annotations = {
-      "kubernetes.digitalocean.com/load-balancer-id"         = ""
-      "service.beta.kubernetes.io/do-loadbalancer-algorithm" = "least_connections"
-      "service.beta.kubernetes.io/do-loadbalancer-hostname"  = "data.killyosaur.net"
-      "service.beta.kubernetes.io/do-loadbalancer-name"      = "anarchyforsale-admin-api"
+      "kubernetes.digitalocean.com/load-balancer-id"                      = ""
+      "service.beta.kubernetes.io/do-loadbalancer-algorithm"              = "least_connections"
+      "service.beta.kubernetes.io/do-loadbalancer-hostname"               = "data.killyosaur.net"
+      "service.beta.kubernetes.io/do-loadbalancer-name"                   = "anarchyforsale-admin-api"
+      "service.beta.kubernetes.io/do-loadbalancer-tls-ports"              = "443"
+      "service.beta.kubernetes.io/do-loadbalancer-protocol"               = "http"
+      "service.beta.kubernetes.io/do-loadbalancer-certificate-id"         = digitalocean_certificate.admin_api.uuid
+      "service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https" = "true"
     }
   }
 
@@ -121,6 +169,13 @@ resource "kubernetes_service" "admin_api" {
       port        = 443
       name        = "https"
       target_port = 5000
+      protocol    = "TCP"
+    }
+    port {
+      port        = 80
+      name        = "http"
+      target_port = 5000
+      protocol    = "TCP"
     }
 
     type = "LoadBalancer"
@@ -137,6 +192,12 @@ data "digitalocean_loadbalancer" "admin_api" {
   name = kubernetes_service.admin_api.metadata[0].annotations["service.beta.kubernetes.io/do-loadbalancer-name"]
 
   depends_on = [kubernetes_service.admin_api]
+}
+
+resource "digitalocean_certificate" "admin_api" {
+  name    = "data-killyosaur-net"
+  type    = "lets_encrypt"
+  domains = ["data.killyosaur.net"]
 }
 
 resource "digitalocean_record" "admin_api" {

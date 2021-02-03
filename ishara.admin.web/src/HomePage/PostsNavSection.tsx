@@ -1,4 +1,4 @@
-import { Collapse, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Typography } from "@material-ui/core";
+import { Collapse, Divider, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Typography } from "@material-ui/core";
 import { DeleteForever } from "@material-ui/icons";
 import React, { FC, useEffect, useState } from "react";
 import { connect, ConnectedProps } from "react-redux";
@@ -75,6 +75,7 @@ const PostsNavSection: FC<Props> = props => {
                     }
                 </List>
             </Collapse>
+            <Divider />
         </div>);
 };
 

@@ -9,11 +9,8 @@ import {
 import NavMenu from './NavMenu';
 import { User } from '../_models';
 
-const useStyles = makeStyles(({ palette, spacing, mixins }: Theme) => createStyles({
+const useStyles = makeStyles(({ palette, spacing, mixins, breakpoints }: Theme) => createStyles({
     home: {
-        flexGrow: 1,
-        zIndex: 1,
-        position: 'relative',
         height: '100%',
         display: 'flex'
     },
@@ -23,7 +20,13 @@ const useStyles = makeStyles(({ palette, spacing, mixins }: Theme) => createStyl
         padding: spacing(3),
         minWidth: 0, // So the Typography noWrap works
     },
-    toolbar: mixins.toolbar
+    drawer: {
+        [breakpoints.up('sm')]: {
+          width: 250,
+          flexShrink: 0,
+        },
+      },
+      toolbar: mixins.toolbar
 }));
 
 type Props = PropsWithChildren<{user: User, isAdmin?: boolean, isAuthor?: boolean}>;
@@ -38,7 +41,7 @@ const HomePage: React.FC<Props> = props => {
 
     return (
         <div className={classes.home}>
-            <NavMenu user={user} isAdmin={isAdmin} isAuthor={isAuthor} />
+            <NavMenu user={user} isAdmin={isAdmin} isAuthor={isAuthor} className={classes.drawer} />
             <Grid className={classes.content}>
                 <Typography component="h2" variant="h2" gutterBottom>
                     Hi {user.firstName}!
